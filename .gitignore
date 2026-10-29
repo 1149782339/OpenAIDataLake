@@ -1,0 +1,51 @@
+# 依赖与构建产物
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# 日志
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python（后端）
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# 测试与覆盖率
+coverage/
+.pytest_cache/
+
+# 验证产物（截图等，不入库）
+frontend/tmp/shots/
+
+# Agent / 工具链本地安装内容（不入库）
+**/.agents/
+**/.claude/skills/
+**/skills-lock.json
+
+# 编辑器 / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# 系统
+ehthumbs.db
+desktop.ini
