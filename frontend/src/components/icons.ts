@@ -135,6 +135,43 @@ export const ICONS: Record<string, IconDef> = {
     attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.7', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
     body: '<path d="M12 2.6 20.4 7.3v9.4L12 21.4 3.6 16.7V7.3L12 2.6Z"/><path d="M3.6 7.3 12 12l8.4-4.7M12 12v9.4"/>',
   },
+  /* 数据探查 */
+  play: {
+    attrs: { fill: 'currentColor', stroke: 'none' },
+    body: '<path d="M7 4.8 19 12 7 19.2V4.8Z"/>',
+  },
+  run: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    body: '<path d="M4 5.5h16M4 5.5 9 18M4 5.5 15.5 11M15.5 5.5 20.5 18"/>',
+  },
+  info: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' },
+    body: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.4"/>',
+  },
+  chart: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    body: '<path d="M4 19.5h16M6.5 16V10M11 16V5.5M15.5 16v-7M20 16v-4"/>',
+  },
+  sun: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round' },
+    body:
+      '<circle cx="12" cy="12" r="4"/>' +
+      '<path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"/>',
+  },
+  expand: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    body:
+      '<path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/>' +
+      '<path d="M4.5 9 9 4.5M19.5 9 15 4.5M4.5 15l4.5 4.5M19.5 15 15 19.5"/>',
+  },
+  check: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '2.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    body: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  },
+  save: {
+    attrs: { fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    body: '<path d="M5 4.5h10.5L19 8v11.5H5V4.5Z"/><path d="M8 4.5v5h7v-5M8 19.5v-5h8v5"/>',
+  },
 }
 
 /** Catalog 树中使用的图标集合 */

@@ -22,6 +22,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '数据目录' },
       },
       {
+        path: 'explore',
+        name: 'explore',
+        component: () => import('@/views/ExploreView.vue'),
+        meta: { title: '数据探查' },
+      },
+      {
         path: 'apikeys',
         name: 'apikeys',
         component: () => import('@/views/ApiKeysView.vue'),

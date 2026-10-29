@@ -35,6 +35,15 @@ const current = computed(() => route.name as string)
         <span>数据目录</span>
       </RouterLink>
 
+      <RouterLink
+        class="nav-title nav-entry"
+        :class="{ active: current === 'explore' }"
+        to="/explore"
+      >
+        <SvgIcon class="grp-ic" name="run" />
+        <span>数据探查</span>
+      </RouterLink>
+
       <div class="nav-group" :class="{ collapsed: permGroupCollapsed }">
         <button class="nav-title" type="button" @click="permGroupCollapsed = !permGroupCollapsed">
           <SvgIcon class="grp-ic" name="navShield" />

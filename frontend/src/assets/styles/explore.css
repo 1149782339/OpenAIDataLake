@@ -1,0 +1,660 @@
+/* ================= 数据探查（SQL 查询）页面 ================= */
+
+.ex-page {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* ---------- 左侧栏 ---------- */
+.ex-side {
+  width: 248px;
+  flex: 0 0 248px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: #fff;
+  overflow: hidden;
+}
+.ex-side-block {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 10px 12px;
+}
+.ex-side-block + .ex-side-block {
+  border-top: 1px solid var(--line);
+  flex: 1;
+}
+.ex-side-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ex-side-title > span {
+  flex: 1;
+  min-width: 0;
+}
+.ex-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-3);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ex-icon-btn:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+.ex-icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ex-search {
+  position: relative;
+  margin: 0 2px 8px;
+}
+.ex-search svg {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.ex-search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px 0 30px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.ex-search input::placeholder {
+  color: #9aa1ab;
+}
+.ex-search input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(43, 108, 240, 0.1);
+}
+
+.ex-query-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -2px;
+  padding: 0 2px;
+}
+.ex-query-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+}
+.ex-query-item:hover {
+  background: var(--soft);
+}
+.ex-query-item.active {
+  background: #eaf1ff;
+  color: var(--blue);
+}
+.ex-query-item .ex-query-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ex-query-item .ex-query-time {
+  font-size: 11.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.ex-tree {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.ex-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px 0 calc(6px + var(--depth, 0) * 14px);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+}
+.ex-tree-row:hover {
+  background: var(--soft);
+}
+.ex-tree-row .ex-tree-chev {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: var(--text-3);
+}
+.ex-tree-row .ex-tree-chev svg {
+  width: 12px;
+  height: 12px;
+}
+.ex-tree-row .ex-tree-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ex-tree-row .ex-tree-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+/* ---------- 主区域 ---------- */
+.ex-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ex-topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 52px;
+  padding: 0 16px 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+.ex-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ex-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background: #fff3e8;
+  color: #d9762c;
+  font-size: 11px;
+  font-weight: 500;
+}
+.ex-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ex-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ex-top-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.ex-top-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.ex-top-btn.is-accent {
+  border-color: #ffd7a8;
+  color: #e08b2e;
+}
+
+.ex-tabs {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 38px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.ex-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.ex-tab svg {
+  width: 13px;
+  height: 13px;
+  color: var(--text-3);
+}
+.ex-tab.active {
+  color: var(--blue);
+  font-weight: 500;
+  border-bottom-color: var(--blue);
+}
+.ex-tab.active svg {
+  color: var(--blue);
+}
+.ex-tab-close {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1;
+}
+.ex-tab-close:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+
+.ex-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.ex-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(43, 108, 240, 0.18);
+  white-space: nowrap;
+}
+.ex-run-btn:hover {
+  background: var(--blue-strong);
+}
+.ex-run-btn:disabled {
+  background: #aebfe8;
+  cursor: not-allowed;
+}
+.ex-run-btn svg {
+  width: 13px;
+  height: 13px;
+}
+.ex-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.ex-field > label {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ex-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.ex-select select {
+  height: 32px;
+  min-width: 132px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13.5px;
+  color: var(--text);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+.ex-select select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(43, 108, 240, 0.1);
+}
+.ex-select > svg {
+  position: absolute;
+  right: 9px;
+  width: 13px;
+  height: 13px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.ex-toolbar-spacer {
+  flex: 1;
+}
+
+.ex-notice {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--blue-soft);
+  font-size: 13px;
+  color: var(--blue);
+}
+.ex-notice svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+/* ---------- SQL 编辑器 ---------- */
+.ex-editor-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ex-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.ex-gutter {
+  position: relative;
+  flex: 0 0 44px;
+  padding: 12px 0;
+  border-right: 1px solid var(--line);
+  background: #fbfcfd;
+  overflow: hidden;
+  text-align: right;
+  user-select: none;
+}
+.ex-gutter-inner {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  padding-right: 10px;
+  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #b4bac3;
+}
+.ex-code {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.ex-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 12px 16px;
+  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: var(--text);
+  white-space: pre;
+  pointer-events: none;
+  will-change: transform;
+}
+.ex-code textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text);
+  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  white-space: pre;
+  overflow: auto;
+}
+.ex-code textarea::selection {
+  background: rgba(43, 108, 240, 0.18);
+}
+.sql-kw {
+  color: #2b6cf0;
+  font-weight: 600;
+}
+.sql-str {
+  color: #c41a16;
+}
+.sql-num {
+  color: #b45309;
+}
+.sql-com {
+  color: #98a1ad;
+  font-style: italic;
+}
+
+.ex-float-bar {
+  position: absolute;
+  top: 30px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+}
+.ex-float-bar button {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.ex-float-bar button:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+.ex-float-bar button svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ex-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 30px;
+  padding: 0 16px;
+  border-top: 1px solid var(--line);
+  background: #fbfcfd;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---------- 运行结果 ---------- */
+.ex-result {
+  flex: 0 0 38%;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  overflow: hidden;
+}
+.ex-result-title {
+  flex: none;
+  padding: 10px 16px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--blue);
+}
+.ex-result-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+}
+.ex-result-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.ex-result-status .ex-dot {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e9f8ef;
+  color: #1a8f4c;
+}
+.ex-result-status .ex-dot svg {
+  width: 10px;
+  height: 10px;
+}
+.ex-result-status.is-error .ex-dot {
+  background: #fff0f0;
+  color: #d9363e;
+}
+.ex-result-meta {
+  font-size: 13px;
+  color: var(--text-3);
+}
+.ex-result-search {
+  position: relative;
+  margin-left: auto;
+  width: 220px;
+}
+.ex-result-search svg {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.ex-result-search input {
+  width: 100%;
+  height: 28px;
+  padding: 0 10px 0 28px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12.5px;
+  color: var(--text);
+  outline: none;
+}
+.ex-result-search input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(43, 108, 240, 0.1);
+}
+.ex-result-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.ex-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.ex-table th {
+  position: sticky;
+  top: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #f8f9fb;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: left;
+  white-space: nowrap;
+}
+.ex-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  white-space: nowrap;
+}
+.ex-table tbody tr:hover td {
+  background: #fafbfc;
+}
+.ex-empty {
+  padding: 34px 0;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .ex-side {
+    width: 200px;
+    flex-basis: 200px;
+  }
+}

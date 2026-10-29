@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 
 import './assets/styles/main.css'
 import './assets/styles/platform.css'
+import './assets/styles/explore.css'
 
 import App from './App.vue'
 import router from './router'
