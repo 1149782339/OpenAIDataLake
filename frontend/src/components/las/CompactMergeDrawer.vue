@@ -34,12 +34,13 @@ const CONFIG_KEYS = [
 const resources = ref(10)
 const targetSize = ref(1)
 const cronEnabled = ref(true)
-const cronTime = ref('03:04')
+const cronTime = ref('')
 const stopPrevious = ref(false)
 const customKeys = ref<{ key: string; value: string }[]>([{ key: '', value: '' }])
 
 const pickOpen = ref(false)
 const pickRoot = ref<HTMLElement | null>(null)
+const timeInput = ref<HTMLInputElement | null>(null)
 
 watch(
   () => props.visible,
@@ -48,12 +49,23 @@ watch(
     resources.value = 10
     targetSize.value = 1
     cronEnabled.value = true
-    cronTime.value = '03:04'
+    cronTime.value = ''
     stopPrevious.value = false
     customKeys.value = [{ key: '', value: '' }]
     pickOpen.value = false
   },
 )
+
+/** 打开原生时间选择器 */
+function openTimePicker() {
+  const el = timeInput.value
+  if (!el) return
+  try {
+    el.showPicker()
+  } catch (e) {
+    el.focus()
+  }
+}
 
 function onDocClick(event: MouseEvent) {
   if (!pickRoot.value) return
@@ -165,14 +177,21 @@ function onConfirm() {
             </div>
           </div>
 
-          <div class="cm-row">
+          <div v-if="cronEnabled" class="cm-row">
             <div class="cm-label"><i class="cm-asterisk">*</i>调度频率</div>
             <div class="cm-control">
               <div class="cm-cron">
                 <span class="cm-cron-text">每天</span>
                 <div class="cm-time">
-                  <input v-model="cronTime" type="text" class="cm-time-input">
-                  <SvgIcon class="cm-time-ic" :icon="LAS_ICONS.clock" />
+                  <input
+                    ref="timeInput"
+                    v-model="cronTime"
+                    type="time"
+                    class="cm-time-input"
+                    :class="{ 'is-empty': !cronTime }"
+                  >
+                  <span v-if="!cronTime" class="cm-time-ph">请选择时间</span>
+                  <SvgIcon class="cm-time-ic" :icon="LAS_ICONS.clock" @click="openTimePicker" />
                 </div>
               </div>
             </div>
@@ -511,6 +530,22 @@ function onConfirm() {
   background: none;
   font-size: 13px;
   color: #0c0d0e;
+}
+
+.cm-time-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.cm-time-input.is-empty {
+  color: transparent;
+}
+
+.cm-time-ph {
+  position: absolute;
+  left: 11px;
+  font-size: 13px;
+  color: #86909c;
+  pointer-events: none;
 }
 
 .cm-time-ic {
