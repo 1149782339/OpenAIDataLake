@@ -229,6 +229,21 @@ export const LAS_ICONS: Record<string, IconDef> = {
     body:
       '<path d="M12 10.58 6.4 5 5 6.4l5.58 5.6L5 17.6 6.4 19l5.6-5.58 5.6 5.58 1.4-1.4L13.4 12 19 6.4 17.6 5Z"/>',
   },
+  trash: {
+    attrs: { ...STROKE },
+    body:
+      '<path d="M4.5 6.5h15M9.5 6.5V4.8c0-.66.54-1.2 1.2-1.2h2.6c.66 0 1.2.54 1.2 1.2v1.7"/>' +
+      '<path d="M6.5 6.5 7.4 18.7c.06.79.72 1.4 1.51 1.4h6.18c.79 0 1.45-.61 1.51-1.4l.9-12.2"/>' +
+      '<path d="M10.5 10v6.5M13.5 10v6.5"/>',
+  },
+  clock: {
+    attrs: { ...STROKE },
+    body: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 1.9"/>',
+  },
+  minus: {
+    attrs: { ...STROKE },
+    body: '<path d="M6 12h12"/>',
+  },
 }
 
 /** 模态 chip 的图标 */
