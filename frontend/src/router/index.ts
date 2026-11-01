@@ -107,6 +107,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '数据库 - AI 数据湖服务 LAS' },
       },
       {
+        path: 'catalog/metadata/database/:catalog/:schema/table/create',
+        name: 'las-catalog-table-create',
+        component: () => import('@/views/las/CatalogTableCreateView.vue'),
+        meta: { title: '创建数据表 - AI 数据湖服务 LAS' },
+      },
+      {
         path: 'catalog/metadata/database/table/detail/:catalog/:schema/:table',
         name: 'las-catalog-table-detail',
         component: () => import('@/views/las/CatalogTableDetailView.vue'),

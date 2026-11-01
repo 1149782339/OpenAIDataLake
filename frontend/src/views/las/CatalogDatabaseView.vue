@@ -43,9 +43,9 @@ function onSelectTable(catalog: string, database: string, table: string) {
 }
 
 function onCreateTable() {
-  const name = window.prompt('请输入数据表名称')
-  if (!name) return
-  store.addTable(catalogName.value, databaseName.value, name)
+  router.push(
+    `/las/catalog/metadata/database/${catalogName.value}/${databaseName.value}/table/create`,
+  )
 }
 </script>
 
