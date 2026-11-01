@@ -5,12 +5,14 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import { ICONS } from '@/components/icons'
 import { LAS_ICONS } from '@/components/las/lasIcons'
 import CatalogTree from '@/components/las/CatalogTree.vue'
+import CreateDatabaseModal, { type DatabasePayload } from '@/components/las/CreateDatabaseModal.vue'
 import { useLasCatalogStore } from '@/stores/lasCatalog'
 
 const router = useRouter()
 const store = useLasCatalogStore()
 
 const dbQuery = ref('')
+const createDbVisible = ref(false)
 
 const databases = computed(() => {
   const q = dbQuery.value.trim().toLowerCase()
@@ -38,9 +40,13 @@ function onCreateCatalog() {
 }
 
 function onCreateDatabase() {
-  const name = window.prompt('请输入数据库名称')
-  if (!name || !store.catalog) return
-  store.addDatabase(store.catalog.name, name)
+  createDbVisible.value = true
+}
+
+function onCreateDatabaseSubmit(payload: DatabasePayload) {
+  if (!store.catalog) return
+  store.addDatabase(store.catalog.name, payload.name)
+  createDbVisible.value = false
 }
 </script>
 
@@ -197,6 +203,13 @@ function onCreateDatabase() {
         </select>
       </div>
     </section>
+
+    <CreateDatabaseModal
+      :visible="createDbVisible"
+      :catalog="store.catalog?.name ?? ''"
+      @close="createDbVisible = false"
+      @submit="onCreateDatabaseSubmit"
+    />
   </div>
 </template>
 
