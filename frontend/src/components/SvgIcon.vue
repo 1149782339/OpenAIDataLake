@@ -4,11 +4,11 @@ import { ICONS, type IconDef } from './icons'
 
 const props = withDefaults(
   defineProps<{
-    name: string
+    name?: string
     icon?: IconDef
     viewBox?: string
   }>(),
-  { icon: undefined, viewBox: undefined },
+  { name: '', icon: undefined, viewBox: undefined },
 )
 
 const def = computed<IconDef>(() => props.icon ?? ICONS[props.name] ?? ICONS.more)
