@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SvgIcon from '@/components/SvgIcon.vue'
 import { LAS_ICONS, FORMAT_ICON } from '@/components/las/lasIcons'
+import CapabilityTip from '@/components/las/CapabilityTip.vue'
 import { FORMATS, useLasStore } from '@/stores/las'
 
 const route = useRoute()
@@ -27,6 +28,25 @@ const catalogBucket = ref('')
 const catalogTable = ref('')
 const advancedOpen = ref(false)
 const errorText = ref('')
+
+/** 鼠标悬停在格式卡片上时展示「支持功能」小弹窗 */
+const capTip = ref({ visible: false, format: '', x: 0, y: 0 })
+
+function showCapTip(el: HTMLElement, item: string) {
+  const rect = el.getBoundingClientRect()
+  const half = 190
+  const x = Math.min(Math.max(rect.left + rect.width / 2, half), window.innerWidth - half)
+  capTip.value = {
+    visible: true,
+    format: item,
+    x,
+    y: rect.top - 8,
+  }
+}
+
+function hideCapTip() {
+  capTip.value = { ...capTip.value, visible: false }
+}
 
 const title = computed(() =>
   kind.value === 'common' ? '创建通用数据集' : '创建推理结果集',
@@ -142,6 +162,8 @@ function onCancel() {
                   :class="{ on: format === item }"
                   type="button"
                   @click="format = item"
+                  @mouseenter="showCapTip($event.currentTarget as HTMLElement, item)"
+                  @mouseleave="hideCapTip"
                 >
                   <SvgIcon :icon="LAS_ICONS[FORMAT_ICON[item]]" />
                   <span>{{ item }}</span>
@@ -200,6 +222,17 @@ function onCancel() {
         </footer>
       </form>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="capTip.visible"
+        class="cap-tip-wrap"
+        :style="{ left: `${capTip.x}px`, top: `${capTip.y}px` }"
+        @mouseleave="hideCapTip"
+      >
+        <CapabilityTip :format="capTip.format" />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -536,5 +569,11 @@ function onCancel() {
 .ghost-btn:hover {
   border-color: #165dff;
   color: #165dff;
+}
+
+.cap-tip-wrap {
+  position: fixed;
+  z-index: 1100;
+  transform: translate(-50%, -100%);
 }
 </style>

@@ -244,6 +244,10 @@ export const LAS_ICONS: Record<string, IconDef> = {
     attrs: { ...STROKE },
     body: '<path d="M6 12h12"/>',
   },
+  check: {
+    attrs: { ...STROKE, 'stroke-width': '2.4' },
+    body: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+  },
 }
 
 /** 模态 chip 的图标 */
