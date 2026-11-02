@@ -12,6 +12,8 @@ export interface LasDataTable {
   tableType: string
   partitionType: string
   owner: string
+  /** 表属性（Table properties），外部表以 EXTERNAL=true 标记 */
+  properties?: Record<string, string>
   /** 表结构，用于数据探查生成结果集 */
   schema?: LasTableField[]
 }
@@ -37,9 +39,70 @@ export interface LasCatalog {
   databases: LasCatalogDatabase[]
 }
 
+/** 存储位置选择器中的节点：桶 → 表 */
+export interface LasStorageNode {
+  name: string
+  type: 'bucket' | 'table'
+  /** 选择该路径后自动解析出的字段结构 */
+  schema?: LasTableField[]
+  children?: LasStorageNode[]
+}
+
+/** 对象存储中可选的桶与表 */
+export const LAS_STORAGE_FOLDERS: LasStorageNode[] = [
+  {
+    name: 'bucket1',
+    type: 'bucket',
+    children: [
+      {
+        name: 'tb1.lance',
+        type: 'table',
+        schema: [
+          { name: 'id', type: 'int64' },
+          { name: 'name', type: 'string' },
+          { name: 'embedding', type: 'vector<float32>[512]' },
+          { name: 'label', type: 'string' },
+          { name: 'created_at', type: 'timestamp[us]' },
+        ],
+      },
+      {
+        name: 'tb2_parquet',
+        type: 'table',
+        schema: [
+          { name: 'id', type: 'int64' },
+          { name: 'device_id', type: 'string' },
+          { name: 'temperature', type: 'float64' },
+          { name: 'humidity', type: 'float64' },
+          { name: 'ts', type: 'timestamp[us]' },
+        ],
+      },
+      {
+        name: 'tb3_paimon',
+        type: 'table',
+        schema: [
+          { name: 'id', type: 'int64' },
+          { name: 'clip_id', type: 'string' },
+          { name: 'embedding', type: 'vector<float32>[512]' },
+          { name: 'created_at', type: 'timestamp[us]' },
+        ],
+      },
+      {
+        name: 'tb4_iceberg',
+        type: 'table',
+        schema: [
+          { name: 'id', type: 'int64' },
+          { name: 'event_time', type: 'timestamp[us]' },
+          { name: 'camera_id', type: 'string' },
+          { name: 'score', type: 'double' },
+        ],
+      },
+    ],
+  },
+]
+
 const seedCatalogs: LasCatalog[] = [
   {
-    name: 'hive',
+    name: 'catalog1',
     owner: '2530手机用户#QGDdVm',
     location: '-',
     createdAt: '2026-10-22 10:24:47',
@@ -48,14 +111,14 @@ const seedCatalogs: LasCatalog[] = [
       {
         name: 'default',
         tableCount: 2,
-        location: 'file:/user/hive/warehouse/default.db',
+        location: 'file:/user/catalog1/warehouse/default.db',
         owner: '2530手机用户#QGDdVm',
         createdAt: '2026-10-22 10:24:47',
         updatedAt: '2026-10-22 10:24:47',
         tables: [
           {
             name: 'test',
-            location: 'tos://user-hexadb/lance_tb2.lance',
+            location: 'oss://user-hexadb/lance_tb2.lance',
             tableType: 'Lance',
             partitionType: '非分区表',
             owner: '2530手机用户#QGDdVm',
@@ -69,7 +132,7 @@ const seedCatalogs: LasCatalog[] = [
           },
           {
             name: 'test3',
-            location: 'tos://user-hexadb/lance_tb2.lance',
+            location: 'oss://user-hexadb/lance_tb2.lance',
             tableType: 'Lance',
             partitionType: '非分区表',
             owner: '2530手机用户#QGDdVm',
@@ -86,7 +149,7 @@ const seedCatalogs: LasCatalog[] = [
     ],
   },
   {
-    name: 'catalog1',
+    name: 'catalog2',
     owner: '2530手机用户#QGDdVm',
     location: '-',
     createdAt: '2026-10-24 09:12:03',
@@ -95,7 +158,7 @@ const seedCatalogs: LasCatalog[] = [
       {
         name: 'default',
         tableCount: 0,
-        location: 'file:/user/catalog1/warehouse/default.db',
+        location: 'file:/user/catalog2/warehouse/default.db',
         owner: '2530手机用户#QGDdVm',
         createdAt: '2026-10-24 09:12:03',
         updatedAt: '2026-10-24 09:12:03',
@@ -105,7 +168,7 @@ const seedCatalogs: LasCatalog[] = [
       {
         name: 'db2',
         tableCount: 0,
-        location: 'file:/user/catalog1/warehouse/db2.db',
+        location: 'file:/user/catalog2/warehouse/db2.db',
         owner: '2530手机用户#QGDdVm',
         createdAt: '2026-10-25 11:20:18',
         updatedAt: '2026-10-28 17:40:21',
@@ -118,7 +181,7 @@ const seedCatalogs: LasCatalog[] = [
 
 export const useLasCatalogStore = defineStore('las-catalog', () => {
   const catalogs = ref<LasCatalog[]>(seedCatalogs.map((c) => ({ ...c })))
-  const selectedCatalog = ref<string>('hive')
+  const selectedCatalog = ref<string>('catalog1')
   const selectedDatabase = ref<string>('default')
   const auditLog = ref(false)
   const treeQuery = ref('')
@@ -182,18 +245,33 @@ export const useLasCatalogStore = defineStore('las-catalog', () => {
     return item
   }
 
-  function addTable(catalogName: string, databaseName: string, name: string) {
+  function addTable(
+    catalogName: string,
+    databaseName: string,
+    name: string,
+    extra: {
+      /** 存储位置 */
+      location?: string
+      /** 表格式 */
+      tableType?: string
+      /** 表属性（Table properties） */
+      properties?: Record<string, string>
+      /** 字段结构 */
+      schema?: LasTableField[]
+    } = {},
+  ) {
     const target = catalogs.value
       .find((c) => c.name === catalogName)
       ?.databases.find((d) => d.name === databaseName)
     if (!target) return null
     target.tables.push({
       name,
-      location: 'tos://user-hexadb/lance_tb2.lance',
-      tableType: 'Lance',
+      location: extra.location ?? 'oss://user-hexadb/lance_tb2.lance',
+      tableType: extra.tableType ?? 'Lance',
       partitionType: '非分区表',
       owner: '2530手机用户#QGDdVm',
-      schema: [
+      properties: extra.properties,
+      schema: extra.schema ?? [
         { name: 'id', type: 'int64' },
         { name: 'name', type: 'string' },
         { name: 'created_at', type: 'timestamp[us]' },

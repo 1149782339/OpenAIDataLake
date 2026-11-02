@@ -13,13 +13,13 @@ const store = useLasStore()
 const kind = computed(() => (route.path.includes('/infer/') ? 'infer' : 'common'))
 
 const SOURCES = [
-  { key: 'tos', label: '对象存储 TOS' },
+  { key: 'oss', label: '对象存储 OSS' },
   { key: 'vefs', label: '文件存储 veFS' },
   { key: 'catalog', label: '元数据 Catalog' },
   { key: 'sample', label: '示例文件' },
 ]
 
-const source = ref('tos')
+const source = ref('oss')
 const enName = ref('')
 const cnName = ref('')
 const storagePath = ref('')
@@ -82,7 +82,7 @@ function onSubmit() {
     creator: '2530手机用户#QGDdVm',
     permission: '我创建的',
     kind: kind.value,
-    source: SOURCES.find((s) => s.key === source.value)?.label ?? '对象存储 TOS',
+    source: SOURCES.find((s) => s.key === source.value)?.label ?? '对象存储 OSS',
     path: storagePath.value.trim(),
   })
   router.push(kind.value === 'common' ? '/las/dataset/common' : '/las/dataset/infer')
@@ -142,8 +142,8 @@ function onCancel() {
                 </button>
               </div>
               <div class="inline">
-                <input v-model="storagePath" type="text" class="input" placeholder="请填入或选择数据在 TOS 中的存储位置">
-                <button class="mini-btn" type="button">＋ 从 TOS 选择</button>
+                <input v-model="storagePath" type="text" class="input" placeholder="请填入或选择数据在 OSS 中的存储位置">
+                <button class="mini-btn" type="button">＋ 从 OSS 选择</button>
               </div>
             </div>
           </div>

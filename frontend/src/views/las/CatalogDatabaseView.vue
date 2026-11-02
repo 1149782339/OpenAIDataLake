@@ -14,7 +14,7 @@ const store = useLasCatalogStore()
 const activeTab = ref<'tables' | 'functions'>('tables')
 const tableQuery = ref('')
 
-const catalogName = computed(() => String(route.params.catalog ?? 'hive'))
+const catalogName = computed(() => String(route.params.catalog ?? 'catalog1'))
 const databaseName = computed(() => String(route.params.schema ?? 'default'))
 
 const database = computed(() => {
@@ -156,18 +156,16 @@ function onCreateTable() {
         <div class="lm-table-wrap">
           <table class="lm-table">
             <colgroup>
-              <col style="width: 18%">
-              <col style="width: 24%">
+              <col style="width: 20%">
+              <col style="width: 30%">
+              <col style="width: 16%">
+              <col style="width: 20%">
               <col style="width: 14%">
-              <col style="width: 14%">
-              <col style="width: 18%">
-              <col style="width: 12%">
             </colgroup>
             <thead>
               <tr>
                 <th>数据表名称</th>
                 <th>存储位置</th>
-                <th>表类型</th>
                 <th>分区类型</th>
                 <th>owner</th>
                 <th>操作</th>
@@ -189,9 +187,6 @@ function onCreateTable() {
                     <SvgIcon :icon="ICONS.copy" />
                   </button>
                 </td>
-                <td>
-                  <span class="lm-type">{{ row.tableType }}</span>
-                </td>
                 <td>{{ row.partitionType }}</td>
                 <td class="lm-ellipsis">{{ row.owner }}</td>
                 <td>
@@ -202,7 +197,7 @@ function onCreateTable() {
                 </td>
               </tr>
               <tr v-if="!tables.length">
-                <td class="lm-empty" colspan="6">暂无数据</td>
+                <td class="lm-empty" colspan="5">暂无数据</td>
               </tr>
             </tbody>
           </table>
@@ -614,6 +609,7 @@ function onCreateTable() {
 .lm-link-btn:hover {
   text-decoration: underline;
 }
+
 
 .lm-ops {
   display: flex;

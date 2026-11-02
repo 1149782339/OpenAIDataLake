@@ -25,7 +25,7 @@ const PERMISSIONS = ['读', '写', '读写', '全部权限']
 
 /** 授权范围 → 资源下拉可选值 */
 const RESOURCE_OPTIONS: Record<string, string[]> = {
-  数据目录: ['catalog1', 'hive'],
+  数据目录: ['catalog1', 'catalog2'],
   数据库: ['default', 'db2'],
   数据表: ['test', 'test3'],
   函数: [],

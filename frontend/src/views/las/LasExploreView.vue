@@ -11,7 +11,7 @@ const catalog = useLasCatalogStore()
 const ui = useUiStore()
 
 const editor = ref<InstanceType<typeof SqlEditor> | null>(null)
-const expanded = ref<Set<string>>(new Set(['cat:hive']))
+const expanded = ref<Set<string>>(new Set(['cat:catalog1']))
 
 interface TreeRow {
   kind: 'cat' | 'db' | 'table'

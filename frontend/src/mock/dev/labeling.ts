@@ -80,7 +80,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
     items: [
       {
         id: 'li_001',
-        file: 'tos://fire-frames/2026/11/02/cam1001/000001.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1001/000001.jpg',
         ts: '2026-11-02 10:41:52',
         camera: 'cam-1001',
         confidence: 0.42,
@@ -89,7 +89,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_002',
-        file: 'tos://fire-frames/2026/11/02/cam1001/000002.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1001/000002.jpg',
         ts: '2026-11-02 10:41:53',
         camera: 'cam-1001',
         confidence: 0.35,
@@ -100,7 +100,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_003',
-        file: 'tos://fire-frames/2026/11/02/cam1002/000003.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1002/000003.jpg',
         ts: '2026-11-02 10:41:55',
         camera: 'cam-1002',
         confidence: 0.91,
@@ -110,7 +110,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_004',
-        file: 'tos://fire-frames/2026/11/02/cam1002/000004.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1002/000004.jpg',
         ts: '2026-11-02 10:41:57',
         camera: 'cam-1002',
         confidence: 0.63,
@@ -122,7 +122,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_005',
-        file: 'tos://fire-frames/2026/11/02/cam1003/000005.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1003/000005.jpg',
         ts: '2026-11-02 10:41:59',
         camera: 'cam-1003',
         confidence: 0.28,
@@ -131,7 +131,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_006',
-        file: 'tos://fire-frames/2026/11/02/cam1003/000006.jpg',
+        file: 'oss://fire-frames/2026/11/02/cam1003/000006.jpg',
         ts: '2026-11-02 10:42:01',
         camera: 'cam-1003',
         confidence: 0.86,
@@ -156,7 +156,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
     items: [
       {
         id: 'li_101',
-        file: 'tos://clean-frames/2026/11/01/cam2001/000101.jpg',
+        file: 'oss://clean-frames/2026/11/01/cam2001/000101.jpg',
         ts: '2026-11-01 02:02:40',
         camera: 'cam-2001',
         confidence: 0.38,
@@ -166,7 +166,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_102',
-        file: 'tos://clean-frames/2026/11/01/cam2001/000102.jpg',
+        file: 'oss://clean-frames/2026/11/01/cam2001/000102.jpg',
         ts: '2026-11-01 02:02:41',
         camera: 'cam-2001',
         confidence: 0.44,
@@ -176,7 +176,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_103',
-        file: 'tos://clean-frames/2026/11/01/cam2002/000103.jpg',
+        file: 'oss://clean-frames/2026/11/01/cam2002/000103.jpg',
         ts: '2026-11-01 02:02:43',
         camera: 'cam-2002',
         confidence: 0.31,
@@ -186,7 +186,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       },
       {
         id: 'li_104',
-        file: 'tos://clean-frames/2026/11/01/cam2002/000104.jpg',
+        file: 'oss://clean-frames/2026/11/01/cam2002/000104.jpg',
         ts: '2026-11-01 02:02:45',
         camera: 'cam-2002',
         confidence: 0.39,

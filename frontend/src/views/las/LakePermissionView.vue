@@ -17,7 +17,7 @@ interface Grant {
 }
 
 const RESOURCE_TYPES = ['数据目录', '数据集', '数据表', '湖']
-const CATALOGS = ['catalog1', 'hive']
+const CATALOGS = ['catalog1', 'catalog2']
 const ACCOUNT_SCOPES = ['全部账号', '仅当前账号']
 
 const resourceType = ref('数据目录')

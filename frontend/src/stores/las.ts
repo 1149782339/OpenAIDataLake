@@ -86,7 +86,7 @@ const seedDatasets: LasDataset[] = [
     updatedAt: '2026-10-22 10:30:02',
     permission: '我创建的',
     kind: 'common',
-    source: '对象存储 TOS',
+    source: '对象存储 OSS',
     path: 'oss://default/las_dataset_20261022_102848.lance',
   },
   {
@@ -104,7 +104,7 @@ const seedDatasets: LasDataset[] = [
     updatedAt: '2025-11-25 23:05:55',
     permission: '公开数据集',
     kind: 'common',
-    source: '对象存储 TOS',
+    source: '对象存储 OSS',
     path: 'oss://default/ds_public.lance',
   },
   {
@@ -122,7 +122,7 @@ const seedDatasets: LasDataset[] = [
     updatedAt: '2025-11-25 23:31:36',
     permission: '公开数据集',
     kind: 'infer',
-    source: '对象存储 TOS',
+    source: '对象存储 OSS',
     path: 'oss://default/ds_public_1.lance',
   },
   {
@@ -158,7 +158,7 @@ const seedDatasets: LasDataset[] = [
     updatedAt: '2026-08-21 11:07:35',
     permission: '我创建的',
     kind: 'common',
-    source: '对象存储 TOS',
+    source: '对象存储 OSS',
     path: 'oss://default/asr_zh_10w.lerobot',
   },
 ]

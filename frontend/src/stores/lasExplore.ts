@@ -16,7 +16,7 @@ export interface LasExploreTab {
   sql: string
 }
 
-const DEFAULT_SQL = 'select id, name, created_at from hive.default.test;'
+const DEFAULT_SQL = 'select id, name, created_at from catalog1.default.test;'
 
 /** 表未声明结构时使用的兜底结构 */
 const FALLBACK_SCHEMA: SqlColumn[] = [
@@ -41,13 +41,13 @@ export const useLasExploreStore = defineStore('las-explore', () => {
       id: 'q2',
       name: '数据表概览',
       updatedAt: '10-28 18:02',
-      sql: 'select id, name, duration from hive.default.test;',
+      sql: 'select id, name, duration from catalog1.default.test;',
     },
     {
       id: 'q3',
       name: '数据表采样',
       updatedAt: '10-27 09:41',
-      sql: 'select * from hive.default.test3 limit 10;',
+      sql: 'select * from catalog1.default.test3 limit 10;',
     },
   ])
 

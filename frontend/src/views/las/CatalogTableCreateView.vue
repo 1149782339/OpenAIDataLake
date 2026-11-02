@@ -2,24 +2,29 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SvgIcon from '@/components/SvgIcon.vue'
+import FolderPickerModal from '@/components/las/FolderPickerModal.vue'
 import { LAS_ICONS } from '@/components/las/lasIcons'
-import { useLasCatalogStore } from '@/stores/lasCatalog'
+import { LAS_STORAGE_FOLDERS, useLasCatalogStore } from '@/stores/lasCatalog'
 
 const route = useRoute()
 const router = useRouter()
 const store = useLasCatalogStore()
 
-const TABLE_FORMATS = ['Hive', 'Iceberg', 'Paimon', 'Lance']
+const TABLE_FORMATS = ['Iceberg', 'Paimon', 'Lance']
 const FIELD_TYPES = [
   'string',
   'int',
   'bigint',
+  'int64',
   'double',
   'float',
+  'float64',
   'boolean',
   'timestamp',
+  'timestamp[us]',
   'date',
   'binary',
+  'vector<float32>[512]',
 ]
 
 interface FieldRow {
@@ -33,24 +38,48 @@ interface ConfigRow {
   value: string
 }
 
-const catalogName = computed(() => String(route.params.catalog ?? 'hive'))
+const catalogName = computed(() => String(route.params.catalog ?? 'catalog1'))
 const databaseName = computed(() => String(route.params.schema ?? 'default'))
 
 const tableName = ref('')
 const tableFormat = ref('Lance')
-const partitionType = ref('分区表')
-const dataFormat = ref('Parquet')
-const storagePath = ref('tos://')
+const storagePath = ref('oss://')
 const remark = ref('')
 const importFromDataset = ref(false)
 const nameError = ref(false)
+const pickerVisible = ref(false)
 
 const fields = ref<FieldRow[]>([{ name: '', type: '', desc: '' }])
+/** 自定义配置 */
 const configs = ref<ConfigRow[]>([{ name: '', value: '' }])
+/** 字段信息是否由存储位置自动解析而来 */
+const fieldsParsed = ref(false)
 
-const showPartition = computed(
-  () => tableFormat.value === 'Hive' && partitionType.value === '分区表',
-)
+/** 根据存储位置匹配对象存储中的表 */
+function findStorageNode(path: string) {
+  const m = path.match(/^oss:\/\/([^/]+)\/(.+?)\/?$/)
+  if (!m) return null
+  const bucket = LAS_STORAGE_FOLDERS.find((b) => b.name === m[1])
+  if (!bucket) return null
+  const name = m[2].split('/')[0]
+  return (bucket.children ?? []).find((c) => c.name === name) ?? null
+}
+
+/** 选择存储位置后自动解析字段信息 */
+function parseFields(path: string) {
+  const node = findStorageNode(path)
+  if (!node?.schema?.length) {
+    fieldsParsed.value = false
+    return
+  }
+  fields.value = node.schema.map((f) => ({ name: f.name, type: f.type, desc: '' }))
+  fieldsParsed.value = true
+}
+
+function onPickPath(path: string) {
+  storagePath.value = path
+  parseFields(path)
+}
 
 function addField() {
   fields.value.push({ name: '', type: '', desc: '' })
@@ -70,10 +99,27 @@ function removeConfig(index: number) {
   if (!configs.value.length) configs.value.push({ name: '', value: '' })
 }
 
+/** 汇总自定义配置；导入模式创建的是外表，额外以 EXTERNAL=true 标记 */
+function buildProperties(): Record<string, string> {
+  const props: Record<string, string> = {}
+  configs.value.forEach((row) => {
+    if (row.name.trim()) props[row.name.trim()] = row.value.trim()
+  })
+  if (importFromDataset.value) props.EXTERNAL = 'true'
+  return props
+}
+
 function onSubmit() {
   nameError.value = !tableName.value.trim()
   if (nameError.value) return
-  store.addTable(catalogName.value, databaseName.value, tableName.value.trim())
+  store.addTable(catalogName.value, databaseName.value, tableName.value.trim(), {
+    location: importFromDataset.value ? storagePath.value : undefined,
+    tableType: tableFormat.value,
+    properties: buildProperties(),
+    schema: fieldsParsed.value
+      ? fields.value.filter((f) => f.name).map((f) => ({ name: f.name, type: f.type }))
+      : undefined,
+  })
   router.push(`/las/catalog/metadata/database/${catalogName.value}/${databaseName.value}`)
 }
 
@@ -129,62 +175,40 @@ function onCancel() {
             </div>
           </div>
 
-          <div class="ct-field">
-            <label class="ct-label">表格式</label>
-            <div class="ct-control">
-              <div class="ct-radios">
-                <label v-for="item in TABLE_FORMATS" :key="item" class="ct-radio">
-                  <input v-model="tableFormat" type="radio" :value="item">
-                  <span class="ct-radio-mark" />
-                  <span>{{ item }}</span>
-                </label>
+          <!-- 表格式 / 存储位置：仅导入模式（外表）下出现 -->
+          <template v-if="importFromDataset">
+            <div class="ct-field">
+              <label class="ct-label">表格式</label>
+              <div class="ct-control">
+                <div class="ct-radios">
+                  <label v-for="item in TABLE_FORMATS" :key="item" class="ct-radio">
+                    <input v-model="tableFormat" type="radio" :value="item">
+                    <span class="ct-radio-mark" />
+                    <span>{{ item }}</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div v-if="tableFormat === 'Hive'" class="ct-field">
-            <label class="ct-label">分区类型</label>
-            <div class="ct-control">
-              <div class="ct-radios">
-                <label class="ct-radio">
-                  <input v-model="partitionType" type="radio" value="分区表">
-                  <span class="ct-radio-mark" />
-                  <span>分区表</span>
-                </label>
-                <label class="ct-radio">
-                  <input v-model="partitionType" type="radio" value="非分区表">
-                  <span class="ct-radio-mark" />
-                  <span>非分区表</span>
-                </label>
+            <div class="ct-field">
+              <label class="ct-label"><i class="ct-req">*</i>选择存储位置</label>
+              <div class="ct-control">
+                <div class="ct-inline">
+                  <input v-model="storagePath" type="text" class="ct-input" placeholder="oss://">
+                  <button class="ct-plus" type="button" title="选择路径" @click="pickerVisible = true">
+                    +
+                  </button>
+                </div>
+                <p class="ct-hint">
+                  系统建议使用的格式：oss://[数据目录路径]/[库目录]/[表名称]
+                  <a href="#" class="ct-link" @click.prevent>使用默认路径</a>
+                </p>
+                <p v-if="fieldsParsed" class="ct-hint is-ok">
+                  已根据所选存储位置自动解析字段信息，可在「字段信息」中查看
+                </p>
               </div>
             </div>
-          </div>
-
-          <div v-if="tableFormat === 'Hive'" class="ct-field">
-            <label class="ct-label">数据格式</label>
-            <div class="ct-control">
-              <select v-model="dataFormat" class="ct-input ct-select">
-                <option>Parquet</option>
-                <option>ORC</option>
-                <option>Text</option>
-                <option>JSON</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="ct-field">
-            <label class="ct-label"><i class="ct-req">*</i>选择存储位置</label>
-            <div class="ct-control">
-              <div class="ct-inline">
-                <input v-model="storagePath" type="text" class="ct-input" placeholder="tos://">
-                <button class="ct-plus" type="button" title="选择路径">+</button>
-              </div>
-              <p class="ct-hint">
-                系统建议使用的格式：tos://[数据目录路径]/[库目录]/[表名称]
-                <a href="#" class="ct-link" @click.prevent>使用默认路径</a>
-              </p>
-            </div>
-          </div>
+          </template>
 
           <div class="ct-field">
             <label class="ct-label">从数据集中导入数据</label>
@@ -199,7 +223,13 @@ function onCancel() {
               >
                 <i class="ct-switch-dot" />
               </button>
-              <p class="ct-hint">请确保要导入的数据集文件存放在上方「存储位置」的路径中</p>
+              <p class="ct-hint">
+                {{
+                  importFromDataset
+                    ? '导入模式下创建的是外表：需指定表格式与数据所在的存储位置'
+                    : '请确保要导入的数据集文件存放在上方「存储位置」的路径中'
+                }}
+              </p>
             </div>
           </div>
 
@@ -220,6 +250,7 @@ function onCancel() {
           <div class="ct-section-head">
             <span class="ct-bar" />
             <span class="ct-section-title">字段信息</span>
+            <span v-if="fieldsParsed" class="ct-section-tip">已自动解析</span>
           </div>
 
           <div class="ct-table-wrap">
@@ -235,10 +266,16 @@ function onCancel() {
               <tbody>
                 <tr v-for="(row, index) in fields" :key="index">
                   <td>
-                    <input v-model="row.name" type="text" class="ct-input" placeholder="请输入">
+                    <input
+                      v-model="row.name"
+                      type="text"
+                      class="ct-input"
+                      :disabled="fieldsParsed"
+                      placeholder="请输入"
+                    >
                   </td>
                   <td>
-                    <select v-model="row.type" class="ct-input ct-select">
+                    <select v-model="row.type" class="ct-input ct-select" :disabled="fieldsParsed">
                       <option value="">请选择</option>
                       <option v-for="t in FIELD_TYPES" :key="t" :value="t">{{ t }}</option>
                     </select>
@@ -247,7 +284,13 @@ function onCancel() {
                     <input v-model="row.desc" type="text" class="ct-input" placeholder="请输入">
                   </td>
                   <td>
-                    <button class="ct-trash" type="button" title="删除" @click="removeField(index)">
+                    <button
+                      class="ct-trash"
+                      type="button"
+                      title="删除"
+                      :disabled="fieldsParsed"
+                      @click="removeField(index)"
+                    >
                       <SvgIcon :icon="LAS_ICONS.trash" />
                     </button>
                   </td>
@@ -256,55 +299,7 @@ function onCancel() {
             </table>
           </div>
 
-          <button class="ct-link-btn" type="button" @click="addField">
-            <SvgIcon class="ct-link-ic" :icon="LAS_ICONS.plus" />
-            <span>添加行</span>
-            <SvgIcon class="ct-link-caret" :icon="LAS_ICONS.chevronDown" />
-          </button>
-        </section>
-
-        <!-- 分区信息 -->
-        <section v-if="showPartition" class="ct-section">
-          <div class="ct-section-head">
-            <span class="ct-bar" />
-            <span class="ct-section-title">分区信息</span>
-          </div>
-
-          <div class="ct-table-wrap">
-            <table class="ct-table">
-              <thead>
-                <tr>
-                  <th><i class="ct-req">*</i>字段名称</th>
-                  <th><i class="ct-req">*</i>字段类型</th>
-                  <th>字段描述</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, index) in fields" :key="`p-${index}`">
-                  <td>
-                    <input v-model="row.name" type="text" class="ct-input" placeholder="请输入">
-                  </td>
-                  <td>
-                    <select v-model="row.type" class="ct-input ct-select">
-                      <option value="">请选择</option>
-                      <option v-for="t in FIELD_TYPES" :key="t" :value="t">{{ t }}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input v-model="row.desc" type="text" class="ct-input" placeholder="请输入">
-                  </td>
-                  <td>
-                    <button class="ct-trash" type="button" title="删除" @click="removeField(index)">
-                      <SvgIcon :icon="LAS_ICONS.trash" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <button class="ct-link-btn" type="button">
+          <button v-if="!fieldsParsed" class="ct-link-btn" type="button" @click="addField">
             <SvgIcon class="ct-link-ic" :icon="LAS_ICONS.plus" />
             <span>添加行</span>
             <SvgIcon class="ct-link-caret" :icon="LAS_ICONS.chevronDown" />
@@ -342,6 +337,13 @@ function onCancel() {
         </footer>
       </form>
     </div>
+
+    <FolderPickerModal
+      :visible="pickerVisible"
+      :model-value="storagePath"
+      @close="pickerVisible = false"
+      @select="onPickPath"
+    />
   </div>
 </template>
 
@@ -433,6 +435,19 @@ function onCancel() {
   color: #1d2129;
 }
 
+.ct-section-tip {
+  padding: 1px 8px;
+  border-radius: 3px;
+  background: #f0fbf3;
+  font-size: 11.5px;
+  color: #00893a;
+}
+
+.ct-hint.is-ok {
+  color: #00893a;
+}
+
+
 .ct-field {
   display: flex;
   align-items: flex-start;
@@ -491,6 +506,12 @@ function onCancel() {
 
 .ct-input::placeholder {
   color: #86909c;
+}
+
+.ct-input:disabled {
+  background: #f7f8fa;
+  color: #86909c;
+  cursor: not-allowed;
 }
 
 .ct-select {
@@ -712,6 +733,15 @@ function onCancel() {
 
 .ct-trash:hover {
   color: #0e42d2;
+}
+
+.ct-trash:disabled {
+  color: #c9cdd4;
+  cursor: not-allowed;
+}
+
+.ct-trash:disabled:hover {
+  color: #c9cdd4;
 }
 
 /* 链接按钮 */

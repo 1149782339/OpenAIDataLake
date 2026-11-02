@@ -16,7 +16,7 @@ const activeTab = ref<'base' | 'overview' | 'storage'>('base')
 const activeSubTab = ref('小文件合并')
 const mergeVisible = ref(false)
 
-const catalogName = computed(() => String(route.params.catalog ?? 'hive'))
+const catalogName = computed(() => String(route.params.catalog ?? 'catalog1'))
 const databaseName = computed(() => String(route.params.schema ?? 'default'))
 const tableName = computed(() => String(route.params.table ?? 'test'))
 
@@ -45,14 +45,22 @@ const baseInfo = computed(() => {
   ]
 })
 
+/** Table properties 的展示文本：外部表以 EXTERNAL=true 标记 */
+const propertiesText = computed(() => {
+  const props = table.value?.properties ?? {}
+  const entries = Object.entries(props)
+  if (!entries.length) return '-'
+  return entries.map(([k, v]) => `${k}=${v}`).join(', ')
+})
+
 const formatInfo = computed(() => [
   { k: '存储格式', v: table.value?.tableType ?? 'Lance' },
-  { k: '输入格式', v: 'Lance' },
-  { k: '输出格式', v: 'Lance' },
+  { k: '输入格式', v: table.value?.tableType ?? 'Lance' },
+  { k: '输出格式', v: table.value?.tableType ?? 'Lance' },
   { k: '压缩格式', v: '-' },
   { k: '格式版本', v: '-' },
   { k: '写入版本', v: '-', help: true },
-  { k: 'Table properties', v: 'EXTERNAL=true, table_type=lance' },
+  { k: 'Table properties', v: propertiesText.value },
 ])
 
 /** 字段信息 */

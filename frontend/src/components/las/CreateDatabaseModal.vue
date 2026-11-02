@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const dbName = ref('')
-const location = ref('tos://')
+const location = ref('oss://')
 const remark = ref('')
 const nameError = ref(false)
 
@@ -25,7 +25,7 @@ watch(
   (v) => {
     if (!v) return
     dbName.value = ''
-    location.value = 'tos://'
+    location.value = 'oss://'
     remark.value = ''
     nameError.value = false
   },
@@ -72,11 +72,11 @@ function onConfirm() {
       <label class="cd-label"><i class="cd-req">*</i>存储位置</label>
       <div class="cd-control">
         <div class="cd-inline">
-          <input v-model="location" type="text" class="cd-input" placeholder="tos://">
+          <input v-model="location" type="text" class="cd-input" placeholder="oss://">
           <button class="cd-plus" type="button" title="选择路径">+</button>
         </div>
         <p class="cd-hint">
-          系统建议使用的格式:tos://[数据目录存储位置]/[库名称]
+          系统建议使用的格式:oss://[数据目录存储位置]/[库名称]
           <a href="#" class="cd-link" @click.prevent>使用默认路径</a>
         </p>
       </div>

@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 const store = useLasCatalogStore()
 
-/** 展开状态，key 为节点路径，如 hive / hive/default / hive/default/tables */
+/** 展开状态，key 为节点路径，如 catalog1 / catalog1/default / catalog1/default/tables */
 const expanded = ref<Record<string, boolean>>({})
 
 function path(...parts: string[]) {
