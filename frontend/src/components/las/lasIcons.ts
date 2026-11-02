@@ -248,6 +248,58 @@ export const LAS_ICONS: Record<string, IconDef> = {
     attrs: { ...STROKE, 'stroke-width': '2.4' },
     body: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
   },
+  info: {
+    attrs: { ...STROKE },
+    body: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.4"/>',
+  },
+  stop: {
+    attrs: { ...FILL },
+    body: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.6"/>',
+  },
+  drag: {
+    attrs: { ...FILL },
+    body:
+      '<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/>' +
+      '<circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/>' +
+      '<circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>',
+  },
+  /* 数据开发 */
+  pipeline: {
+    attrs: { ...STROKE },
+    body:
+      '<rect x="2.5" y="9" width="6" height="6" rx="1.6"/>' +
+      '<rect x="15.5" y="4" width="6" height="6" rx="1.6"/>' +
+      '<rect x="15.5" y="14" width="6" height="6" rx="1.6"/>' +
+      '<path d="M8.5 12h3.5V7h3.5M12 12v5h3.5"/>',
+  },
+  lineage: {
+    attrs: { ...STROKE },
+    body:
+      '<circle cx="5" cy="12" r="2.4"/>' +
+      '<circle cx="12" cy="5.5" r="2.4"/>' +
+      '<circle cx="12" cy="18.5" r="2.4"/>' +
+      '<circle cx="19" cy="12" r="2.4"/>' +
+      '<path d="m7.1 10.8 2.6-3.6M7.1 13.2l2.6 3.6M14.4 6.6l2.3 3.7M14.4 17.4l2.3-3.7"/>',
+  },
+  engine: {
+    attrs: { ...STROKE },
+    body:
+      '<circle cx="12" cy="12" r="3"/>' +
+      '<path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>',
+  },
+  asset: {
+    attrs: { ...STROKE },
+    body:
+      '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/>' +
+      '<path d="M3.5 9.5h17M9 9.5v10M15 9.5v10"/>',
+  },
+  annotate: {
+    attrs: { ...STROKE },
+    body:
+      '<rect x="3" y="5" width="14" height="14" rx="2"/>' +
+      '<path d="m4.5 16 3.6-3.6 2.6 2.4 2.2-2 3.6 3.2"/>' +
+      '<rect x="14.5" y="3" width="6.5" height="6.5" rx="1.4" stroke-dasharray="2.4 2"/>',
+  },
 }
 
 /** 模态 chip 的图标 */

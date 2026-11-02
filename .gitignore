@@ -33,6 +33,7 @@ frontend/tmp/shots/
 **/.agents/
 **/.claude/skills/
 **/skills-lock.json
+.serena/
 
 # 编辑器 / IDE
 .vscode/*

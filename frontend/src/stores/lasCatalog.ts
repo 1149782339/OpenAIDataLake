@@ -1,12 +1,19 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+export interface LasTableField {
+  name: string
+  type: string
+}
+
 export interface LasDataTable {
   name: string
   location: string
   tableType: string
   partitionType: string
   owner: string
+  /** 表结构，用于数据探查生成结果集 */
+  schema?: LasTableField[]
 }
 
 export interface LasCatalogDatabase {
@@ -52,6 +59,13 @@ const seedCatalogs: LasCatalog[] = [
             tableType: 'Lance',
             partitionType: '非分区表',
             owner: '2530手机用户#QGDdVm',
+            schema: [
+              { name: 'id', type: 'int64' },
+              { name: 'name', type: 'string' },
+              { name: 'source', type: 'string' },
+              { name: 'duration', type: 'float64' },
+              { name: 'created_at', type: 'timestamp[us]' },
+            ],
           },
           {
             name: 'test3',
@@ -59,6 +73,12 @@ const seedCatalogs: LasCatalog[] = [
             tableType: 'Lance',
             partitionType: '非分区表',
             owner: '2530手机用户#QGDdVm',
+            schema: [
+              { name: 'id', type: 'int64' },
+              { name: 'name', type: 'string' },
+              { name: 'size', type: 'int64' },
+              { name: 'created_at', type: 'timestamp[us]' },
+            ],
           },
         ],
         functions: [],
@@ -173,6 +193,11 @@ export const useLasCatalogStore = defineStore('las-catalog', () => {
       tableType: 'Lance',
       partitionType: '非分区表',
       owner: '2530手机用户#QGDdVm',
+      schema: [
+        { name: 'id', type: 'int64' },
+        { name: 'name', type: 'string' },
+        { name: 'created_at', type: 'timestamp[us]' },
+      ],
     })
     target.tableCount = target.tables.length
     return target

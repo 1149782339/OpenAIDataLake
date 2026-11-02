@@ -124,6 +124,61 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/las/LakePermissionView.vue'),
         meta: { title: '权限管理 - AI 数据湖服务 LAS' },
       },
+      {
+        path: 'catalog/explore',
+        name: 'las-catalog-explore',
+        component: () => import('@/views/las/LasExploreView.vue'),
+        meta: { title: '数据探查 - AI 数据湖服务 LAS' },
+      },
+    ],
+  },
+  {
+    path: '/dev',
+    component: () => import('@/layouts/LasLayout.vue'),
+    children: [
+      { path: '', redirect: '/dev/operators' },
+      {
+        path: 'operators',
+        name: 'dev-operators',
+        component: () => import('@/views/dev/OperatorManageView.vue'),
+        meta: { title: '算子管理 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'workflow',
+        name: 'dev-workflow',
+        component: () => import('@/views/dev/WorkflowManageView.vue'),
+        meta: { title: '工作流管理 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'workflow/create',
+        name: 'dev-workflow-create',
+        component: () => import('@/views/dev/WorkflowEditorView.vue'),
+        meta: { title: '编辑工作流 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'workflow/:id',
+        name: 'dev-workflow-detail',
+        component: () => import('@/views/dev/WorkflowDetailView.vue'),
+        meta: { title: '工作流详情 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'engine',
+        name: 'dev-engine',
+        component: () => import('@/views/dev/ExecutionEngineView.vue'),
+        meta: { title: '执行引擎 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'assets',
+        name: 'dev-assets',
+        component: () => import('@/views/dev/AssetManageView.vue'),
+        meta: { title: '资产管理 - AI 数据湖服务 LAS' },
+      },
+      {
+        path: 'annotation',
+        name: 'dev-annotation',
+        component: () => import('@/views/dev/AnnotationView.vue'),
+        meta: { title: '数据标注 - AI 数据湖服务 LAS' },
+      },
     ],
   },
   {

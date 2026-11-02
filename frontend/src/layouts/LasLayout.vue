@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import SvgIcon from '@/components/SvgIcon.vue'
+import AppToast from '@/components/AppToast.vue'
 import { LAS_ICONS } from '@/components/las/lasIcons'
 
 interface NavChild {
@@ -33,18 +34,31 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    key: 'dev',
+    label: '数据开发',
+    icon: 'pipeline',
+    children: [
+      { label: '算子管理', to: '/dev/operators' },
+      { label: '工作流管理', to: '/dev/workflow' },
+      { label: '执行引擎', to: '/dev/engine' },
+      { label: '资产管理', to: '/dev/assets' },
+      { label: '数据标注', to: '/dev/annotation' },
+    ],
+  },
+  {
     key: 'lake',
     label: '湖管理',
     icon: 'lake',
     children: [
       { label: '元数据', to: '/las/catalog/metadata' },
+      { label: '数据探查', to: '/las/catalog/explore' },
       { label: '权限管理', to: '/las/catalog/permission' },
     ],
   },
 ]
 
-/** 默认展开：数据集、湖管理 */
-const expanded = ref<Record<string, boolean>>({ dataset: true, lake: true })
+/** 默认展开：数据集、数据开发、湖管理 */
+const expanded = ref<Record<string, boolean>>({ dataset: true, dev: true, lake: true })
 
 const activePath = computed(() => route.path)
 
@@ -96,6 +110,8 @@ function toggleGroup(key: string) {
     <div class="las-main">
       <RouterView />
     </div>
+
+    <AppToast />
   </div>
 </template>
 
