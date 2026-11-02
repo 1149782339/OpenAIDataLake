@@ -34,6 +34,8 @@ interface Scene {
 
 const props = withDefaults(
   defineProps<{
+    /** 真实监控画面图片地址；未提供时使用内联 SVG 示意图 */
+    src?: string
     /** 随机种子，不同 seed 生成的画面不同 */
     seed?: number
     /** 宽（px） */
@@ -54,6 +56,7 @@ const props = withDefaults(
     caption?: string
   }>(),
   {
+    src: '',
     seed: 1,
     width: 96,
     height: 54,
@@ -159,41 +162,31 @@ const anchor = computed(() => {
 
 const scene = computed(() => buildScene(props.seed, anchor.value))
 
+/** 检测框：按相对坐标输出百分比，图片与示意图共用 */
 const box = computed(() => {
   const b = props.bbox
   if (!props.showBbox || !b || b.length < 4) return null
   return {
-    x: b[0] * 320,
-    y: b[1] * 180,
-    w: b[2] * 320,
-    h: b[3] * 180,
+    left: `${b[0] * 100}%`,
+    top: `${b[1] * 100}%`,
+    width: `${b[2] * 100}%`,
+    height: `${b[3] * 100}%`,
   }
-})
-
-/** 检测框四角加强线 */
-const corners = computed(() => {
-  const b = box.value
-  if (!b) return []
-  const len = Math.min(12, b.w / 4, b.h / 4)
-  return [
-    `M${b.x} ${b.y + len}V${b.y}H${b.x + len}`,
-    `M${b.x + b.w - len} ${b.y}H${b.x + b.w}V${b.y + len}`,
-    `M${b.x} ${b.y + b.h - len}V${b.y + b.h}H${b.x + len}`,
-    `M${b.x + b.w - len} ${b.y + b.h}H${b.x + b.w}V${b.y + b.h - len}`,
-  ]
 })
 </script>
 
 <template>
-  <svg
-    class="fp-svg"
-    :width="width"
-    :height="height"
-    viewBox="0 0 320 180"
-    preserveAspectRatio="xMidYMid slice"
-    role="img"
-    aria-label="监控画面示意图"
-  >
+  <div class="fp" :style="{ width: `${width}px`, height: `${height}px` }">
+    <img v-if="src" class="fp-img" :src="src" :alt="caption || '监控画面'">
+
+    <svg
+      v-else
+      class="fp-scene"
+      viewBox="0 0 320 180"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label="监控画面示意图"
+    >
     <defs>
       <linearGradient :id="skyId" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" :stop-color="scene.skyTop" />
@@ -283,45 +276,81 @@ const corners = computed(() => {
 
     <!-- 暗角 -->
     <rect x="0" y="0" width="320" height="180" :fill="`url(#${vignetteId})`" />
+    </svg>
 
-    <!-- 检测框 -->
-    <g v-if="box">
-      <rect
-        :x="box.x"
-        :y="box.y"
-        :width="box.w"
-        :height="box.h"
-        :fill="bboxColor"
-        fill-opacity="0.08"
-        :stroke="bboxColor"
-        :stroke-width="2"
-        :stroke-dasharray="bboxDash ? '7 5' : undefined"
-      />
-      <path
-        v-for="(c, i) in corners"
-        :key="`c${i}`"
-        :d="c"
-        fill="none"
-        :stroke="bboxColor"
-        stroke-width="3.4"
-        stroke-linecap="square"
-      />
-      <g v-if="bboxLabel">
-        <rect :x="box.x" :y="box.y - 17" :width="bboxLabel.length * 9 + 10" height="16" rx="2" :fill="bboxColor" />
-        <text :x="box.x + 5" :y="box.y - 5" fill="#ffffff" font-size="11">{{ bboxLabel }}</text>
-      </g>
-    </g>
+    <!-- 检测框（图片与示意图共用） -->
+    <div
+      v-if="box"
+      class="fp-box"
+      :class="{ 'is-dash': bboxDash }"
+      :style="{
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        height: box.height,
+        borderColor: bboxColor,
+        background: `color-mix(in srgb, ${bboxColor} 8%, transparent)`,
+      }"
+    >
+      <span v-if="bboxLabel" class="fp-label" :style="{ background: bboxColor }">
+        {{ bboxLabel }}
+      </span>
+    </div>
 
     <!-- 水印 -->
-    <text v-if="caption" x="8" y="172" fill="#ffffff" fill-opacity="0.72" font-size="9">
-      {{ caption }}
-    </text>
-  </svg>
+    <span v-if="caption" class="fp-caption">{{ caption }}</span>
+  </div>
 </template>
 
 <style scoped>
-.fp-svg {
-  display: block;
+.fp {
+  position: relative;
+  overflow: hidden;
   background: #1b2438;
+}
+
+.fp-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fp-scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fp-box {
+  position: absolute;
+  border: 2px solid #f53f3f;
+  box-sizing: border-box;
+}
+
+.fp-box.is-dash {
+  border-style: dashed;
+}
+
+.fp-label {
+  position: absolute;
+  left: -2px;
+  bottom: 100%;
+  padding: 1px 5px;
+  border-radius: 2px 2px 2px 0;
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.fp-caption {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  color: #fff;
+  font-size: 11px;
+  opacity: 0.78;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 </style>

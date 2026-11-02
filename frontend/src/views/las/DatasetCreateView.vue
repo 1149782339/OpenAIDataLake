@@ -49,7 +49,7 @@ function hideCapTip() {
 }
 
 const title = computed(() =>
-  kind.value === 'common' ? '创建通用数据集' : '创建推理结果集',
+  kind.value === 'common' ? '创建数据集' : '创建推理结果集',
 )
 
 function genName() {

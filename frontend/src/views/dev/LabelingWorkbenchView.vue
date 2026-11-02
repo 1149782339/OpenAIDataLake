@@ -196,6 +196,7 @@ function statusText(item: DevLabelItem): string {
           >
             <span class="lw-thumb" :class="{ 'is-pending': !item.reviewAction }">
               <FramePreview
+                :src="item.image"
                 :seed="seedOf(item)"
                 :width="104"
                 :height="58"
@@ -223,6 +224,7 @@ function statusText(item: DevLabelItem): string {
       <section class="lw-main">
         <div v-if="currentItem" class="lw-canvas">
           <FramePreview
+            :src="currentItem.image"
             :seed="seedOf(currentItem)"
             :width="720"
             :height="405"

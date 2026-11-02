@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import SvgIcon from '@/components/SvgIcon.vue'
+import DatasetPermissionModal from '@/components/las/DatasetPermissionModal.vue'
 import { LAS_ICONS, FORMAT_ICON } from '@/components/las/lasIcons'
 import { useLasStore, type LasDataset, type SortKey } from '@/stores/las'
+import { useUiStore } from '@/stores/ui'
 
 const props = defineProps<{
   rows: LasDataset[]
@@ -10,10 +12,14 @@ const props = defineProps<{
 }>()
 
 const store = useLasStore()
+const ui = useUiStore()
 
 const menuOpen = ref(false)
 const menuStyle = ref({ left: '0px', top: '0px' })
 const menuRow = ref<LasDataset | null>(null)
+/** 数据集权限弹窗 */
+const permVisible = ref(false)
+const permRow = ref<LasDataset | null>(null)
 
 const basePath = computed(() =>
   props.kind === 'common' ? '/las/dataset/common' : '/las/dataset/infer',
@@ -36,15 +42,33 @@ function openMenu(event: MouseEvent, row: LasDataset) {
   menuOpen.value = true
 }
 
-function onMenuAction(action: 'copy' | 'delete') {
+function onMenuAction(action: 'permission' | 'copy' | 'delete') {
   const row = menuRow.value
   menuOpen.value = false
   if (!row) return
-  if (action === 'copy') {
+  if (action === 'permission') {
+    permRow.value = row
+    permVisible.value = true
+  } else if (action === 'copy') {
     void navigator.clipboard?.writeText(row.name)
   } else {
     store.datasets = store.datasets.filter((d) => d.id !== row.id)
   }
+}
+
+function onPermissionSubmit(payload: {
+  manageScope: string
+  manageUsers: string[]
+  readScope: string
+  readUsers: string[]
+}) {
+  const manage = payload.manageScope === '组织内所有人'
+    ? '组织内所有人'
+    : payload.manageUsers.join('、') || '未指定'
+  const read = payload.readScope === '组织内所有人'
+    ? '组织内所有人'
+    : payload.readUsers.join('、') || '未指定'
+  ui.toast(`权限已配置：管理权限 ${manage}，只读权限 ${read}`)
 }
 
 function onDocClick() {
@@ -148,9 +172,17 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     </table>
 
     <div v-if="menuOpen" class="row-menu" :style="menuStyle" @click.stop>
+      <button type="button" @click="onMenuAction('permission')">权限管理</button>
       <button type="button" @click="onMenuAction('copy')">复制数据集名称</button>
       <button type="button" class="danger" @click="onMenuAction('delete')">删除数据集</button>
     </div>
+
+    <DatasetPermissionModal
+      :visible="permVisible"
+      :dataset="permRow"
+      @close="permVisible = false"
+      @submit="onPermissionSubmit"
+    />
   </div>
 </template>
 

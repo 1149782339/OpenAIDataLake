@@ -50,13 +50,13 @@ const routes: RouteRecordRaw[] = [
         path: 'dataset/common',
         name: 'las-common-datasets',
         component: () => import('@/views/las/CommonDatasetsView.vue'),
-        meta: { title: '通用数据集 - AI 数据湖服务 LAS' },
+        meta: { title: '数据集 - AI 数据湖服务 LAS' },
       },
       {
         path: 'dataset/common/create',
         name: 'las-common-create',
         component: () => import('@/views/las/DatasetCreateView.vue'),
-        meta: { title: '创建通用数据集 - AI 数据湖服务 LAS' },
+        meta: { title: '创建数据集 - AI 数据湖服务 LAS' },
       },
       {
         path: 'dataset/common/detail/:id',
@@ -67,30 +67,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'dataset/common/sql/:id',
         name: 'las-common-sql',
-        component: () => import('@/views/las/DatasetSqlView.vue'),
-        meta: { title: 'SQL 查询 - AI 数据湖服务 LAS' },
-      },
-      {
-        path: 'dataset/infer',
-        name: 'las-infer-datasets',
-        component: () => import('@/views/las/InferDatasetsView.vue'),
-        meta: { title: '推理结果集 - AI 数据湖服务 LAS' },
-      },
-      {
-        path: 'dataset/infer/create',
-        name: 'las-infer-create',
-        component: () => import('@/views/las/DatasetCreateView.vue'),
-        meta: { title: '创建推理结果集 - AI 数据湖服务 LAS' },
-      },
-      {
-        path: 'dataset/infer/detail/:id',
-        name: 'las-infer-detail',
-        component: () => import('@/views/las/DatasetDetailView.vue'),
-        meta: { title: '数据集详情 - AI 数据湖服务 LAS' },
-      },
-      {
-        path: 'dataset/infer/sql/:id',
-        name: 'las-infer-sql',
         component: () => import('@/views/las/DatasetSqlView.vue'),
         meta: { title: 'SQL 查询 - AI 数据湖服务 LAS' },
       },
@@ -160,12 +136,6 @@ const routes: RouteRecordRaw[] = [
         name: 'dev-workflow-detail',
         component: () => import('@/views/dev/WorkflowDetailView.vue'),
         meta: { title: '工作流详情 - AI 数据湖服务 LAS' },
-      },
-      {
-        path: 'engine',
-        name: 'dev-engine',
-        component: () => import('@/views/dev/ExecutionEngineView.vue'),
-        meta: { title: '执行引擎 - AI 数据湖服务 LAS' },
       },
       {
         path: 'assets',

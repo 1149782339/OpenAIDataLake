@@ -5,6 +5,16 @@
  * 出现在数据标注列表中，等待人工确认。任务与运行实例一一对应，不跨运行合并。
  */
 
+/* 示例画面：前 3 张为火灾，第 4 张为烟雾，其余为炼钢厂 */
+import imgFire1 from '@/assets/images/000001.jpg'
+import imgFire2 from '@/assets/images/000002.jpg'
+import imgFire3 from '@/assets/images/000003.jpg'
+import imgSmoke from '@/assets/images/000004.jpg'
+import imgPlant1 from '@/assets/images/000005.jpg'
+import imgPlant2 from '@/assets/images/000006.jpg'
+import imgPlant3 from '@/assets/images/000007.jpg'
+import imgPlant4 from '@/assets/images/000008.jpg'
+
 /** 标注任务状态 */
 export type DevLabelTaskStatus = '待处理' | '进行中' | '已完成' | '已驳回'
 
@@ -18,6 +28,8 @@ export interface DevLabelItem {
   id: string
   /** 图片引用 */
   file: string
+  /** 示例画面（前端打包资源） */
+  image: string
   /** 采集时间 */
   ts: string
   /** 摄像头 */
@@ -81,6 +93,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_001',
         file: 'oss://fire-frames/2026/11/02/cam1001/000001.jpg',
+        image: imgFire1,
         ts: '2026-11-02 10:41:52',
         camera: 'cam-1001',
         confidence: 0.42,
@@ -90,6 +103,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_002',
         file: 'oss://fire-frames/2026/11/02/cam1001/000002.jpg',
+        image: imgFire2,
         ts: '2026-11-02 10:41:53',
         camera: 'cam-1001',
         confidence: 0.35,
@@ -101,6 +115,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_003',
         file: 'oss://fire-frames/2026/11/02/cam1002/000003.jpg',
+        image: imgFire3,
         ts: '2026-11-02 10:41:55',
         camera: 'cam-1002',
         confidence: 0.91,
@@ -111,6 +126,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_004',
         file: 'oss://fire-frames/2026/11/02/cam1002/000004.jpg',
+        image: imgSmoke,
         ts: '2026-11-02 10:41:57',
         camera: 'cam-1002',
         confidence: 0.63,
@@ -123,6 +139,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_005',
         file: 'oss://fire-frames/2026/11/02/cam1003/000005.jpg',
+        image: imgPlant1,
         ts: '2026-11-02 10:41:59',
         camera: 'cam-1003',
         confidence: 0.28,
@@ -132,6 +149,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_006',
         file: 'oss://fire-frames/2026/11/02/cam1003/000006.jpg',
+        image: imgPlant2,
         ts: '2026-11-02 10:42:01',
         camera: 'cam-1003',
         confidence: 0.86,
@@ -157,6 +175,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_101',
         file: 'oss://clean-frames/2026/11/01/cam2001/000101.jpg',
+        image: imgPlant3,
         ts: '2026-11-01 02:02:40',
         camera: 'cam-2001',
         confidence: 0.38,
@@ -167,6 +186,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_102',
         file: 'oss://clean-frames/2026/11/01/cam2001/000102.jpg',
+        image: imgPlant4,
         ts: '2026-11-01 02:02:41',
         camera: 'cam-2001',
         confidence: 0.44,
@@ -177,6 +197,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_103',
         file: 'oss://clean-frames/2026/11/01/cam2002/000103.jpg',
+        image: imgPlant1,
         ts: '2026-11-01 02:02:43',
         camera: 'cam-2002',
         confidence: 0.31,
@@ -187,6 +208,7 @@ export const DEV_LABEL_TASKS: DevLabelTask[] = [
       {
         id: 'li_104',
         file: 'oss://clean-frames/2026/11/01/cam2002/000104.jpg',
+        image: imgSmoke,
         ts: '2026-11-01 02:02:45',
         camera: 'cam-2002',
         confidence: 0.39,

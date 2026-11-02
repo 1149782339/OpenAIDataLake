@@ -9,13 +9,11 @@ import { findPipelineDataset } from '@/mock/dev/datasets'
 import { getOperator } from '@/mock/dev/operators'
 import { useDevLabelingStore } from '@/stores/devLabeling'
 import { useDevWorkflowStore } from '@/stores/devWorkflow'
-import { useUiStore } from '@/stores/ui'
 
 const route = useRoute()
 const router = useRouter()
 const store = useDevWorkflowStore()
 const labeling = useDevLabelingStore()
-const ui = useUiStore()
 
 const tab = ref<'runs' | 'versions'>('runs')
 const selectedVersionId = ref<string>('')
@@ -83,8 +81,9 @@ function selectVersion(id: string) {
   selectedNodeId.value = v?.nodes[0]?.id ?? null
 }
 
-function onResume(runId: string) {
-  if (store.resumeRun(runId)) ui.toast('运行实例已恢复')
+/** 挂起解除的唯一触发器是标注任务完成，操作者应前往标注任务处理 */
+function onGoLabeling(taskId: string) {
+  router.push(`/dev/labeling/${taskId}`)
 }
 
 function onEdit() {
@@ -210,14 +209,14 @@ function labelTaskOf(runId: string) {
                   管道挂起中，等待标注任务 {{ labelTaskOf(run.id)?.id }} 完成
                 </div>
                 <button
-                  v-if="run.status === '挂起'"
+                  v-if="run.status === '挂起' && labelTaskOf(run.id)"
                   class="wd-op-btn"
                   type="button"
-                  @click="onResume(run.id)"
+                  @click="onGoLabeling(labelTaskOf(run.id)!.id)"
                 >
-                  恢复
+                  前往标注任务
                 </button>
-                <span v-if="run.status !== '挂起'" class="wd-muted">-</span>
+                <span v-else-if="run.status !== '挂起'" class="wd-muted">-</span>
               </td>
             </tr>
             <tr v-if="!runs.length">

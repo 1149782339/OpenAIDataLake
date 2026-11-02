@@ -16,6 +16,8 @@ interface NavGroup {
   icon: string
   /** 暂未开放的功能 */
   disabled?: boolean
+  /** 无子项时，一级菜单直接跳转的地址 */
+  to?: string
   children: NavChild[]
 }
 
@@ -23,15 +25,12 @@ const route = useRoute()
 const collapsed = ref(false)
 
 const navGroups: NavGroup[] = [
-  { key: 'operators', label: '算子服务', icon: 'operators', disabled: true, children: [] },
   {
     key: 'dataset',
     label: '数据集',
     icon: 'dataset',
-    children: [
-      { label: '通用数据集', to: '/las/dataset/common' },
-      { label: '推理数据集', to: '/las/dataset/infer' },
-    ],
+    to: '/las/dataset/common',
+    children: [],
   },
   {
     key: 'dev',
@@ -40,7 +39,6 @@ const navGroups: NavGroup[] = [
     children: [
       { label: '算子管理', to: '/dev/operators' },
       { label: '工作流管理', to: '/dev/workflow' },
-      { label: '执行引擎', to: '/dev/engine' },
       { label: '资产管理', to: '/dev/assets' },
       { label: '数据标注', to: '/dev/labeling' },
     ],
@@ -72,7 +70,18 @@ function toggleGroup(key: string) {
     <aside class="las-sidebar">
       <nav class="las-nav">
         <div v-for="group in navGroups" :key="group.key" class="nav-group">
+          <RouterLink
+            v-if="group.to && !group.children.length"
+            class="group-title"
+            :class="{ active: activePath.startsWith(group.to) }"
+            :title="group.label"
+            :to="group.to"
+          >
+            <SvgIcon class="grp-ic" :icon="LAS_ICONS[group.icon]" />
+            <span class="grp-text">{{ group.label }}</span>
+          </RouterLink>
           <button
+            v-else
             class="group-title"
             type="button"
             :class="{ disabled: group.disabled, open: expanded[group.key] }"
@@ -173,8 +182,22 @@ function toggleGroup(key: string) {
   cursor: pointer;
 }
 
+.group-title {
+  text-decoration: none;
+}
+
 .group-title:hover {
   background: rgba(29, 33, 41, 0.06);
+}
+
+.group-title.active {
+  background: #f2f3f5;
+  color: #165dff;
+  font-weight: 500;
+}
+
+.group-title.active .grp-ic {
+  color: #165dff;
 }
 
 .group-title.disabled {

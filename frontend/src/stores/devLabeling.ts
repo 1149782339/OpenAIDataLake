@@ -6,6 +6,7 @@ import {
   type DevLabelTask,
   type DevReviewAction,
 } from '@/mock/dev/labeling'
+import { useDevWorkflowStore } from './devWorkflow'
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
@@ -25,6 +26,7 @@ export interface ReviewPatch {
  * 为每个运行实例创建一个标注任务；本 store 只负责人工环节（确认 / 修改 / 驳回）。
  */
 export const useDevLabelingStore = defineStore('dev-labeling', () => {
+  const workflowStore = useDevWorkflowStore()
   const tasks = ref<DevLabelTask[]>(clone(DEV_LABEL_TASKS))
 
   const taskList = computed(() => tasks.value)
@@ -73,6 +75,8 @@ export const useDevLabelingStore = defineStore('dev-labeling', () => {
     const remaining = remainingOf(task)
     if (remaining === 0) {
       task.status = '已完成'
+      // 挂起解除的唯一触发器：标注任务完成后，对应运行实例自动续跑
+      workflowStore.resumeRun(task.runId)
     } else if (task.status === '待处理') {
       task.status = '进行中'
     }
