@@ -11,6 +11,8 @@ export interface DevNode {
   opId: string
   x: number
   y: number
+  /** 该算子产出的中间表名，画布节点下方小字展示 */
+  table?: string
 }
 
 export interface DevEdge {
@@ -62,6 +64,8 @@ export interface DevWorkflow {
 
 export interface DevRunInstance {
   id: string
+  /** 运行实例序号，展示为 run#12 */
+  runNo: number
   /** 所属管道 */
   workflowId: string
   /** 运行时所绑定的版本 */
@@ -83,36 +87,35 @@ export const DEV_PIPELINES = [
 
 /** 火灾检测链路的画布快照 */
 const FIRE_NODES_V1: DevNode[] = [
-  { id: 'n1', opId: 'op_parse_load', x: 210, y: 60 },
-  { id: 'n2', opId: 'op_feature_extract', x: 400, y: 60 },
-  { id: 'n3', opId: 'op_cross_modal_match', x: 590, y: 60 },
-  { id: 'n4', opId: 'op_retrieve_fusion', x: 780, y: 60 },
-  { id: 'n5', opId: 'op_metadata_extract', x: 400, y: 220 },
-  { id: 'n6', opId: 'op_data_annotate', x: 590, y: 220 },
+  { id: 'n1', opId: 'op_parse_load', x: 152, y: 60, table: 'fire_frames' },
+  { id: 'n2', opId: 'op_feature_extract', x: 296, y: 60, table: 'fire_features' },
+  { id: 'n3', opId: 'op_retrieve_fusion', x: 440, y: 60, table: 'fire_candidates' },
+  { id: 'n4', opId: 'op_data_annotate', x: 584, y: 60, table: 'fire_prelabel' },
+  { id: 'n5', opId: 'op_manual_confirm', x: 728, y: 60, table: 'fire_frames_labeled' },
+  { id: 'n6', opId: 'op_metadata_extract', x: 872, y: 60, table: 'fire_meta' },
+  { id: 'n7', opId: 'op_write_table', x: 1016, y: 60, table: 'fire_dataset_v3' },
 ]
 
 const FIRE_EDGES_V1: DevEdge[] = [
   { id: 'e0', from: DEV_INPUT_NODE_ID, to: 'n1', fixed: true },
   { id: 'e1', from: 'n1', to: 'n2' },
-  { id: 'e2', from: 'n1', to: 'n5' },
-  { id: 'e3', from: 'n2', to: 'n3' },
-  { id: 'e4', from: 'n3', to: 'n4' },
+  { id: 'e2', from: 'n2', to: 'n3' },
+  { id: 'e3', from: 'n3', to: 'n4' },
+  { id: 'e4', from: 'n4', to: 'n5' },
   { id: 'e5', from: 'n5', to: 'n6' },
-  /** 故意保留一条契约不满足的连线，用于演示连线校验提示 */
-  { id: 'e6', from: 'n2', to: 'n6' },
+  { id: 'e6', from: 'n6', to: 'n7' },
 ]
 
 /** 检索融合算子的默认参数 */
 const FIRE_PARAMS: Record<string, Record<string, unknown>> = {
-  n4: {
-    query_texts: ['明火', '浓烟', '火光'],
+  n3: {
+    query_texts: ['明火', '浓烟', '火光', '火焰蔓延'],
     scalar_filter: 'camera_id IN (1001, 1002, 1003)',
     top_k: 500,
     rrf_k: 60,
     use_index: true,
     index_type: 'IVF-PQ',
   },
-  n3: { threshold: 0.75 },
   n2: {
     model_type: '多模态',
     model_name: 'multimodal-base-v3',
@@ -120,8 +123,14 @@ const FIRE_PARAMS: Record<string, Record<string, unknown>> = {
     fusion_mode: '加权求和',
   },
   n1: { frame_interval: 2, image_format: 'jpg', max_resolution: '1920x1080' },
-  n5: { time_field: 'event_time' },
-  n6: { confidence_threshold: 0.8, auto_approve: true },
+  n4: {
+    auto_model: 'fire-smoke-det-v2',
+    confidence_threshold: 0.5,
+    suspend_policy: 'suspend',
+  },
+  n5: { writeback_table: 'fire_frames_labeled' },
+  n6: { time_field: 'event_time' },
+  n7: { target_table: 'fire_dataset_v3', write_mode: '追加' },
 }
 
 export const DEV_WORKFLOWS: DevWorkflow[] = [
@@ -155,7 +164,7 @@ export const DEV_WORKFLOWS: DevWorkflow[] = [
         inputDatasetId: 'ds_fire_video_clips',
         dataType: '视频',
         nodes: FIRE_NODES_V1.map((n) => ({ ...n })),
-        edges: FIRE_EDGES_V1.filter((e) => e.id !== 'e6').map((e) => ({ ...e })),
+        edges: FIRE_EDGES_V1.map((e) => ({ ...e })),
         params: JSON.parse(JSON.stringify(FIRE_PARAMS)) as Record<string, Record<string, unknown>>,
         createdAt: '2026-11-02 10:35:00',
         updatedAt: '2026-11-02 10:41:12',
@@ -179,8 +188,8 @@ export const DEV_WORKFLOWS: DevWorkflow[] = [
         inputDatasetId: 'ds_road_crash',
         dataType: '视频',
         nodes: [
-          { id: 'c1', opId: 'op_parse_load', x: 210, y: 60 },
-          { id: 'c2', opId: 'op_feature_transform', x: 400, y: 60 },
+          { id: 'c1', opId: 'op_parse_load', x: 152, y: 60, table: 'clean_frames' },
+          { id: 'c2', opId: 'op_feature_extract', x: 296, y: 60, table: 'clean_features' },
         ],
         edges: [
           { id: 'ce0', from: DEV_INPUT_NODE_ID, to: 'c1', fixed: true },
@@ -188,7 +197,12 @@ export const DEV_WORKFLOWS: DevWorkflow[] = [
         ],
         params: {
           c1: { frame_interval: 5, image_format: 'jpg', max_resolution: '1280x720' },
-          c2: { normalize: true, target_dim: 512 },
+          c2: {
+            model_type: '图像',
+            model_name: 'image-base-v2',
+            batch_size: 64,
+            image_size: '224x224',
+          },
         },
         createdAt: '2026-09-12 14:20:00',
         updatedAt: '2026-10-30 11:02:44',
@@ -212,16 +226,41 @@ export const DEV_WORKFLOWS: DevWorkflow[] = [
         inputDatasetId: 'ds_news_text',
         dataType: '文本',
         nodes: [
-          { id: 'p1', opId: 'op_parse_load', x: 210, y: 60 },
-          { id: 'p2', opId: 'op_data_annotate', x: 400, y: 60 },
+          { id: 'p1', opId: 'op_parse_load', x: 152, y: 60, table: 'pretrain_frames' },
+          { id: 'p2', opId: 'op_feature_extract', x: 296, y: 60, table: 'pretrain_features' },
+          { id: 'p3', opId: 'op_retrieve_fusion', x: 440, y: 60, table: 'pretrain_candidates' },
+          { id: 'p4', opId: 'op_data_annotate', x: 584, y: 60, table: 'pretrain_prelabel' },
+          { id: 'p5', opId: 'op_manual_confirm', x: 728, y: 60, table: 'pretrain_labeled' },
         ],
         edges: [
           { id: 'pe0', from: DEV_INPUT_NODE_ID, to: 'p1', fixed: true },
           { id: 'pe1', from: 'p1', to: 'p2' },
+          { id: 'pe2', from: 'p2', to: 'p3' },
+          { id: 'pe3', from: 'p3', to: 'p4' },
+          { id: 'pe4', from: 'p4', to: 'p5' },
         ],
         params: {
           p1: { file_encoding: 'UTF-8', chunk_rule: '按段落' },
-          p2: { confidence_threshold: 0.8, auto_approve: true },
+          p2: {
+            model_type: '文本',
+            model_name: 'text-base-v2',
+            batch_size: 64,
+            max_token: 512,
+          },
+          p3: {
+            query_texts: ['明火', '浓烟', '火光', '火焰蔓延'],
+            scalar_filter: 'camera_id IN (2001, 2002)',
+            top_k: 200,
+            rrf_k: 60,
+            use_index: true,
+            index_type: 'HNSW',
+          },
+          p4: {
+            auto_model: 'fire-smoke-det-v2',
+            confidence_threshold: 0.5,
+            suspend_policy: 'split',
+          },
+          p5: { writeback_table: 'pretrain_labeled' },
         },
         createdAt: '2026-11-01 09:12:00',
         updatedAt: '2026-11-01 09:40:00',
@@ -234,6 +273,7 @@ export const DEV_WORKFLOWS: DevWorkflow[] = [
 export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   {
     id: 'run_20261102_0031',
+    runNo: 13,
     workflowId: 'wf_fire_detect',
     versionId: 'wf_fire_detect_v1',
     status: '运行中',
@@ -243,6 +283,7 @@ export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   },
   {
     id: 'run_20261102_0030',
+    runNo: 12,
     workflowId: 'wf_fire_detect',
     versionId: 'wf_fire_detect_v1',
     status: '挂起',
@@ -252,6 +293,7 @@ export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   },
   {
     id: 'run_20261102_0029',
+    runNo: 11,
     workflowId: 'wf_frame_clean',
     versionId: 'wf_frame_clean_v1',
     status: '成功',
@@ -261,6 +303,7 @@ export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   },
   {
     id: 'run_20261102_0028',
+    runNo: 10,
     workflowId: 'wf_fire_detect',
     versionId: 'wf_fire_detect_v1',
     status: '成功',
@@ -270,6 +313,7 @@ export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   },
   {
     id: 'run_20261102_0027',
+    runNo: 9,
     workflowId: 'wf_fire_detect',
     versionId: 'wf_fire_detect_v1',
     status: '失败',
@@ -279,6 +323,7 @@ export const DEV_RUN_INSTANCES: DevRunInstance[] = [
   },
   {
     id: 'run_20261102_0026',
+    runNo: 8,
     workflowId: 'wf_frame_clean',
     versionId: 'wf_frame_clean_v1',
     status: '成功',

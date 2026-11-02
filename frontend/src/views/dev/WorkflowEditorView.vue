@@ -7,7 +7,7 @@ import OperatorParamsPanel from '@/components/dev/OperatorParamsPanel.vue'
 import WorkflowCanvas from '@/components/dev/WorkflowCanvas.vue'
 import { LAS_ICONS } from '@/components/las/lasIcons'
 import { DEV_PIPELINE_DATASETS, findPipelineDataset } from '@/mock/dev/datasets'
-import { getOperator } from '@/mock/dev/operators'
+import { getOperator, checkContract } from '@/mock/dev/operators'
 import { DEV_INPUT_NODE_ID, type DevEdge, type DevNode } from '@/mock/dev/workflow'
 import { useDevWorkflowStore } from '@/stores/devWorkflow'
 import { useUiStore } from '@/stores/ui'
@@ -105,7 +105,65 @@ const missingParams = computed(() => {
 })
 
 /** 发布条件：已选定管道输入数据集，且必填参数配置完整 */
-const canPublish = computed(() => Boolean(inputDatasetId.value) && missingParams.value.length === 0)
+const canPublish = computed(
+  () => Boolean(inputDatasetId.value) && missingParams.value.length === 0 && manualConfirmOk.value,
+)
+
+/** 标注算子（自动预标注）节点 */
+const annotateNodes = computed(() => nodes.value.filter((n) => n.opId === 'op_data_annotate'))
+
+/** 人工确认节点 */
+const manualConfirmNodes = computed(() => nodes.value.filter((n) => n.opId === 'op_manual_confirm'))
+
+function suspendPolicyOf(nodeId: string): string {
+  const value = params.value[nodeId]?.suspend_policy
+  return typeof value === 'string' && value ? value : 'suspend'
+}
+
+/** 存在标注算子且挂起策略不为 never 时，必须配置人工确认节点 */
+const needsManualConfirm = computed(() =>
+  annotateNodes.value.some((n) => suspendPolicyOf(n.id) !== 'never'),
+)
+
+/** 人工确认节点的回写表 schema 与下游算子输入契约的匹配问题 */
+const manualConfirmIssues = computed(() => {
+  const issues: string[] = []
+  manualConfirmNodes.value.forEach((node) => {
+    edges.value
+      .filter((e) => e.from === node.id)
+      .forEach((edge) => {
+        const to = nodes.value.find((n) => n.id === edge.to)
+        const check = checkContract(
+          getOperator(node.opId),
+          to ? getOperator(to.opId) : undefined,
+        )
+        if (!check.valid) issues.push(check.message)
+      })
+  })
+  return issues
+})
+
+const manualConfirmOk = computed(
+  () =>
+    !needsManualConfirm.value ||
+    (manualConfirmNodes.value.length > 0 && manualConfirmIssues.value.length === 0),
+)
+
+/** 发布不可用时的原因说明 */
+const publishBlockedReason = computed(() => {
+  if (frozen.value) return '该版本已发布或已有运行记录，不可发布，请创建新版本'
+  if (!inputDatasetId.value) return '请先选择管道输入数据集'
+  if (missingParams.value.length) {
+    return `必填参数未配置：${missingParams.value.map((m) => m.label).join('、')}`
+  }
+  if (needsManualConfirm.value && manualConfirmNodes.value.length === 0) {
+    return '存在标注算子且挂起策略不为 never，必须包含「人工确认」节点'
+  }
+  if (manualConfirmIssues.value.length) {
+    return `人工确认节点回写表与下游算子输入契约不匹配：${manualConfirmIssues.value.join('；')}`
+  }
+  return '发布当前草稿'
+})
 
 onMounted(() => {
   const id = String(route.query.id ?? '')
@@ -285,6 +343,10 @@ function onPublish() {
     ui.toast(`必填参数未配置：${missingParams.value.map((m) => m.label).join('、')}`)
     return
   }
+  if (!manualConfirmOk.value) {
+    ui.toast(publishBlockedReason.value)
+    return
+  }
   onSave()
   const id = workflowId.value
   const vid = versionId.value
@@ -359,7 +421,7 @@ function onBack() {
           class="we-btn is-primary"
           type="button"
           :disabled="frozen || !canPublish"
-          :title="canPublish ? '发布当前草稿' : '请先选择管道输入数据集并补全必填参数'"
+          :title="publishBlockedReason"
           @click="onPublish"
         >
           发布
@@ -373,6 +435,13 @@ function onBack() {
         该版本已发布或已绑定运行实例，画布与参数只读。任何修改请通过「创建新版本」复制出新草稿，旧版本与其运行记录保持不变。
       </span>
       <button class="we-notice-btn" type="button" @click="onCreateNewVersion">创建新版本</button>
+    </div>
+
+    <div v-else-if="!manualConfirmOk" class="we-notice is-error">
+      <SvgIcon :icon="LAS_ICONS.info" />
+      <span>
+        存在标注算子且挂起策略不为 never：必须包含「人工确认」节点，且其回写表 schema 与下游算子输入契约匹配，否则不允许发布。
+      </span>
     </div>
 
     <div class="we-body">
@@ -638,6 +707,11 @@ function onBack() {
   width: 14px;
   height: 14px;
   flex: none;
+}
+
+.we-notice.is-error {
+  background: #fff1f0;
+  color: #d9363e;
 }
 
 .we-notice-btn {

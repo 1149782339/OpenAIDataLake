@@ -42,7 +42,7 @@ const navGroups: NavGroup[] = [
       { label: '工作流管理', to: '/dev/workflow' },
       { label: '执行引擎', to: '/dev/engine' },
       { label: '资产管理', to: '/dev/assets' },
-      { label: '数据标注', to: '/dev/annotation' },
+      { label: '数据标注', to: '/dev/labeling' },
     ],
   },
   {

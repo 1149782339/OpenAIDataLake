@@ -28,8 +28,8 @@ export const DEV_DATA_TYPES: DevDataType[] = ['视频', '音频', '文本', '结
 export const DEV_PIPELINE_DATASETS: DevPipelineDataset[] = [
   {
     id: 'ds_fire_video_clips',
-    name: 'fire_video_clips',
-    cnName: '火灾监控视频切片',
+    name: 'fire_raw',
+    cnName: '火灾监控原始视频',
     type: '视频',
     lakeType: '逻辑入湖',
     format: 'Video',

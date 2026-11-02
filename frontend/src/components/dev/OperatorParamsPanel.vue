@@ -262,7 +262,7 @@ function onNumberInput(def: DevParamDef, event: Event) {
 <style scoped>
 .wpp {
   flex: none;
-  width: 300px;
+  width: 284px;
   display: flex;
   flex-direction: column;
   padding: 14px 14px 16px;

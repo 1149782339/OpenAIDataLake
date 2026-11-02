@@ -98,6 +98,12 @@ export const useDevWorkflowStore = defineStore('dev-workflow', () => {
     return `v${Math.max(0, ...nums) + 1}`
   }
 
+  /** 运行实例序号（展示为 run#12） */
+  function nextRunNo(): number {
+    const nums = runs.value.map((r) => r.runNo)
+    return Math.max(0, ...nums) + 1
+  }
+
   /** 新建工作流：初始为 v1 草稿 */
   function createWorkflow(payload: { name: string; description: string }): DevWorkflow {
     const id = `wf_${Date.now()}`
@@ -198,6 +204,7 @@ export const useDevWorkflowStore = defineStore('dev-workflow', () => {
     if (!version) return null
     const run: DevRunInstance = {
       id: `run_${Date.now()}`,
+      runNo: nextRunNo(),
       workflowId,
       versionId: version.id,
       status: '运行中',

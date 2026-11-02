@@ -46,6 +46,10 @@ const props = withDefaults(
     bbox?: readonly number[] | null
     /** 检测框左上角标签文案 */
     bboxLabel?: string
+    /** 检测框颜色 */
+    bboxColor?: string
+    /** 检测框是否虚线（待确认状态） */
+    bboxDash?: boolean
     /** 左下角水印文案 */
     caption?: string
   }>(),
@@ -56,6 +60,8 @@ const props = withDefaults(
     showBbox: false,
     bbox: null,
     bboxLabel: '',
+    bboxColor: '#f53f3f',
+    bboxDash: false,
     caption: '',
   },
 )
@@ -285,22 +291,23 @@ const corners = computed(() => {
         :y="box.y"
         :width="box.w"
         :height="box.h"
-        fill="#f53f3f"
+        :fill="bboxColor"
         fill-opacity="0.08"
-        stroke="#f53f3f"
-        stroke-width="2"
+        :stroke="bboxColor"
+        :stroke-width="2"
+        :stroke-dasharray="bboxDash ? '7 5' : undefined"
       />
       <path
         v-for="(c, i) in corners"
         :key="`c${i}`"
         :d="c"
         fill="none"
-        stroke="#f53f3f"
+        :stroke="bboxColor"
         stroke-width="3.4"
         stroke-linecap="square"
       />
       <g v-if="bboxLabel">
-        <rect :x="box.x" :y="box.y - 17" :width="bboxLabel.length * 9 + 10" height="16" rx="2" fill="#f53f3f" />
+        <rect :x="box.x" :y="box.y - 17" :width="bboxLabel.length * 9 + 10" height="16" rx="2" :fill="bboxColor" />
         <text :x="box.x + 5" :y="box.y - 5" fill="#ffffff" font-size="11">{{ bboxLabel }}</text>
       </g>
     </g>

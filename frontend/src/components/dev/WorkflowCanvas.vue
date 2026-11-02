@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import SvgIcon from '@/components/SvgIcon.vue'
 import { LAS_ICONS } from '@/components/las/lasIcons'
-import { checkContract, getOperator, type DevOperator } from '@/mock/dev/operators'
+import { DEV_OPERATORS, checkContract, getOperator, type DevOperator } from '@/mock/dev/operators'
 import { DEV_INPUT_NODE_ID, type DevEdge, type DevNode } from '@/mock/dev/workflow'
 
 const props = withDefaults(
@@ -43,13 +43,13 @@ const emit = defineEmits<{
   'select-input': []
 }>()
 
-const NODE_W = 172
-const NODE_H = 58
-const CANVAS_W = 980
+const NODE_W = 128
+const NODE_H = 66
+const CANVAS_W = 1160
 const CANVAS_H = 460
 
 /** 管道输入节点固定在画布左侧 */
-const inputNode: DevNode = { id: DEV_INPUT_NODE_ID, opId: '__input__', x: 10, y: 60 }
+const inputNode: DevNode = { id: DEV_INPUT_NODE_ID, opId: '__input__', x: 8, y: 60 }
 
 /** 画布上的全部节点：管道输入 + 算子节点 */
 const canvasNodes = computed<DevNode[]>(() => [inputNode, ...props.nodes])
@@ -62,15 +62,8 @@ const draggingOp = ref<{ opId: string; x: number; y: number } | null>(null)
 /** 画布内拖动节点 */
 const draggingNode = ref<{ id: string; dx: number; dy: number } | null>(null)
 
-const PALETTE_OPS: DevOperator[] = [
-  ...(getOperator('op_parse_load') ? [getOperator('op_parse_load')!] : []),
-  ...(getOperator('op_feature_extract') ? [getOperator('op_feature_extract')!] : []),
-  ...(getOperator('op_cross_modal_match') ? [getOperator('op_cross_modal_match')!] : []),
-  ...(getOperator('op_feature_transform') ? [getOperator('op_feature_transform')!] : []),
-  ...(getOperator('op_retrieve_fusion') ? [getOperator('op_retrieve_fusion')!] : []),
-  ...(getOperator('op_metadata_extract') ? [getOperator('op_metadata_extract')!] : []),
-  ...(getOperator('op_data_annotate') ? [getOperator('op_data_annotate')!] : []),
-]
+/** 算子面板：内置算子全量 */
+const PALETTE_OPS: DevOperator[] = DEV_OPERATORS
 
 function opOf(nodeId: string): DevOperator | undefined {
   const node = canvasNodes.value.find((n) => n.id === nodeId)
@@ -97,8 +90,11 @@ const edgeViews = computed<EdgeView[]>(() =>
     const y1 = from.y + NODE_H / 2
     const x2 = to.x
     const y2 = to.y + NODE_H / 2
-    const dx = Math.max(40, Math.abs(x2 - x1) / 2)
-    const path = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
+    // 向左回折的连线（跨行）先向右绕行再回到目标，避免控制点甩出画布
+    const path =
+      x2 < x1
+        ? `M ${x1} ${y1} C ${x1 + 44} ${y1}, ${x1 + 44} ${y2}, ${x2} ${y2}`
+        : `M ${x1} ${y1} C ${x1 + Math.max(40, (x2 - x1) / 2)} ${y1}, ${x2 - Math.max(40, (x2 - x1) / 2)} ${y2}, ${x2} ${y2}`
     // 管道输入 → 算子：连线由数据集类型保证，固定不可改指
     const check =
       edge.from === DEV_INPUT_NODE_ID
@@ -321,8 +317,10 @@ function onWindowMouseUp(event: MouseEvent) {
               'is-active': node.id === selectedId,
               'is-source': node.id === connectingFrom,
               'is-target': connectingFrom !== null && node.id !== connectingFrom,
+              'is-manual': node.opId === 'op_manual_confirm',
             }"
             :style="{ left: `${node.x}px`, top: `${node.y}px`, width: `${NODE_W}px`, height: `${NODE_H}px` }"
+            :title="node.opId === 'op_manual_confirm' ? '管道挂起中，等待标注任务完成' : undefined"
             @mousedown="onNodeMouseDown(node, $event)"
           >
             <button
@@ -334,8 +332,16 @@ function onWindowMouseUp(event: MouseEvent) {
               @click.stop="onPortClick(node.id, $event)"
             />
             <div class="wfc-node-body">
-              <span class="wfc-node-name">{{ opOf(node.id)?.name }}</span>
+              <span class="wfc-node-head">
+                <SvgIcon
+                  v-if="node.opId === 'op_manual_confirm'"
+                  class="wfc-node-ic"
+                  :icon="LAS_ICONS.user"
+                />
+                <span class="wfc-node-name">{{ opOf(node.id)?.name }}</span>
+              </span>
               <span class="wfc-node-cat">{{ opOf(node.id)?.category }}</span>
+              <span v-if="node.table" class="wfc-node-table">{{ node.table }}</span>
             </div>
             <button
               v-if="!readonly"
@@ -371,7 +377,7 @@ function onWindowMouseUp(event: MouseEvent) {
 /* ---------- 算子面板 ---------- */
 .wfc-palette {
   flex: none;
-  width: 190px;
+  width: 168px;
   display: flex;
   flex-direction: column;
   padding: 14px 12px;
@@ -611,8 +617,8 @@ function onWindowMouseUp(event: MouseEvent) {
 }
 
 .wfc-node.is-input .wfc-node-cat {
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 10px;
+  line-height: 1.45;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -637,14 +643,28 @@ function onWindowMouseUp(event: MouseEvent) {
 .wfc-node-body {
   flex: 1;
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+}
+
+.wfc-node-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.wfc-node-ic {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: #165dff;
 }
 
 .wfc-node-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #1d2129;
   overflow: hidden;
@@ -653,8 +673,28 @@ function onWindowMouseUp(event: MouseEvent) {
 }
 
 .wfc-node-cat {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #86909c;
+}
+
+.wfc-node-table {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 9.5px;
+  color: #165dff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 人工确认节点：虚线框 + 人形图标，区别于普通算子 */
+.wfc-node.is-manual {
+  border-style: dashed;
+  border-color: #165dff;
+  background: #f5f9ff;
+}
+
+.wfc-node.is-manual .wfc-node-table {
+  color: #4e5969;
 }
 
 .wfc-port {

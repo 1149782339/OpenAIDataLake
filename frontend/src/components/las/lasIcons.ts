@@ -300,6 +300,22 @@ export const LAS_ICONS: Record<string, IconDef> = {
       '<path d="m4.5 16 3.6-3.6 2.6 2.4 2.2-2 3.6 3.2"/>' +
       '<rect x="14.5" y="3" width="6.5" height="6.5" rx="1.4" stroke-dasharray="2.4 2"/>',
   },
+  /** 人工确认节点（人形） */
+  user: {
+    attrs: { ...STROKE },
+    body:
+      '<circle cx="12" cy="7.5" r="3.6"/>' +
+      '<path d="M5.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>',
+  },
+  /** 写表节点 */
+  write: {
+    attrs: { ...STROKE },
+    body:
+      '<ellipse cx="12" cy="6" rx="7.5" height="2.8"/>' +
+      '<path d="M4.5 6v12c0 1.55 3.35 2.8 7.5 2.8s7.5-1.25 7.5-2.8V6"/>' +
+      '<path d="M4.5 12c0 1.55 3.35 2.8 7.5 2.8s7.5-1.25 7.5-2.8"/>' +
+      '<path d="M12 15.5v-5M9.8 12.4 12 10.2l2.2 2.2"/>',
+  },
 }
 
 /** 模态 chip 的图标 */

@@ -7,12 +7,14 @@ import WorkflowCanvas from '@/components/dev/WorkflowCanvas.vue'
 import { LAS_ICONS } from '@/components/las/lasIcons'
 import { findPipelineDataset } from '@/mock/dev/datasets'
 import { getOperator } from '@/mock/dev/operators'
+import { useDevLabelingStore } from '@/stores/devLabeling'
 import { useDevWorkflowStore } from '@/stores/devWorkflow'
 import { useUiStore } from '@/stores/ui'
 
 const route = useRoute()
 const router = useRouter()
 const store = useDevWorkflowStore()
+const labeling = useDevLabelingStore()
 const ui = useUiStore()
 
 const tab = ref<'runs' | 'versions'>('runs')
@@ -102,6 +104,11 @@ function statusClass(status: string): string {
   if (status === '挂起') return 'is-suspended'
   if (status === '成功') return 'is-success'
   return 'is-failed'
+}
+
+/** 挂起实例对应的标注任务：管道挂起中，等待人工标注完成 */
+function labelTaskOf(runId: string) {
+  return labeling.taskOfRun(runId)
 }
 </script>
 
@@ -199,6 +206,9 @@ function statusClass(status: string): string {
               <td>{{ run.duration }}</td>
               <td>{{ run.currentOp }}</td>
               <td>
+                <div v-if="run.status === '挂起' && labelTaskOf(run.id)" class="wd-hold">
+                  管道挂起中，等待标注任务 {{ labelTaskOf(run.id)?.id }} 完成
+                </div>
                 <button
                   v-if="run.status === '挂起'"
                   class="wd-op-btn"
@@ -207,7 +217,7 @@ function statusClass(status: string): string {
                 >
                   恢复
                 </button>
-                <span v-else class="wd-muted">-</span>
+                <span v-if="run.status !== '挂起'" class="wd-muted">-</span>
               </td>
             </tr>
             <tr v-if="!runs.length">
@@ -549,6 +559,12 @@ function statusClass(status: string): string {
 
 .wd-muted {
   color: #c9cdd4;
+}
+
+.wd-hold {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #d9762c;
 }
 
 .wd-empty {
