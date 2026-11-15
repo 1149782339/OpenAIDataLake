@@ -22,7 +22,7 @@ const permVisible = ref(false)
 const permRow = ref<LasDataset | null>(null)
 
 const basePath = computed(() =>
-  props.kind === 'common' ? '/las/dataset/common' : '/las/dataset/infer',
+  props.kind === 'common' ? '/dataset/common' : '/dataset/infer',
 )
 
 function fmtNum(value: number) {

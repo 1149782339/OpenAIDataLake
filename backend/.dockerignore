@@ -1,0 +1,6 @@
+**/target/*
+!lake-console/target/app.jar
+!s3-gateway/target/app.jar
+**/*.iml
+.git
+.gitignore

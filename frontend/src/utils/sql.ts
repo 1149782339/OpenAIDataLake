@@ -66,12 +66,18 @@ export function isSelectQuery(sql: string): boolean {
   return /^select\b/i.test(cleaned)
 }
 
+/** 解析 FROM 后的完整表名，保留 catalog.schema.table */
+export function parseFromIdentifier(sql: string): string | null {
+  const cleaned = sql.replace(/--[^\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ')
+  const match = cleaned.match(/\bfrom\s+([A-Za-z_][\w.]*)/i)
+  return match?.[1] ?? null
+}
+
 /** 解析 FROM 后的表名（取最后一段，忽略别名） */
 export function parseFromTable(sql: string): string | null {
-  const cleaned = sql.replace(/--[^\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ')
-  const m = cleaned.match(/\bfrom\s+([A-Za-z_][\w.]*)/i)
-  if (!m) return null
-  const parts = m[1].split('.')
+  const identifier = parseFromIdentifier(sql)
+  if (!identifier) return null
+  const parts = identifier.split('.')
   return parts[parts.length - 1] ?? null
 }
 
@@ -103,7 +109,7 @@ function mockValue(type: string, index: number): string | number | null {
  */
 export function runMockSql(
   sql: string,
-  knownTables: { name: string; schema: SqlColumn[] }[],
+  knownTables: { name: string; schema: SqlColumn[]; qualified?: string }[],
 ): { ok: true; result: SqlResult } | { ok: false; message: string } {
   const trimmed = sql.trim()
   if (!trimmed) return { ok: false, message: '请输入要执行的 SQL' }
@@ -111,9 +117,12 @@ export function runMockSql(
     return { ok: false, message: '演示环境仅支持 SELECT 查询' }
   }
 
-  const tableName = parseFromTable(trimmed)
+  const identifier = parseFromIdentifier(trimmed)
+  const tableName = identifier?.split('.').pop() ?? null
   const table = knownTables.find(
-    (t) => t.name.toLowerCase() === (tableName ?? '').toLowerCase(),
+    (item) => item.qualified && item.qualified.toLowerCase() === (identifier ?? '').toLowerCase(),
+  ) ?? knownTables.find(
+    (item) => item.name.toLowerCase() === (tableName ?? '').toLowerCase(),
   )
   const schema: SqlColumn[] = table?.schema ?? [
     { name: 'id', type: 'int64' },
@@ -123,12 +132,12 @@ export function runMockSql(
   ]
 
   const selected = parseSelectColumns(trimmed)
-  const columns = selected.length
-    ? selected.map((name) => {
-        const hit = schema.find((c) => c.name.toLowerCase() === name.toLowerCase())
+  const columns = !selected.length || (selected.length === 1 && selected[0] === '*')
+    ? schema.map((column) => column.name)
+    : selected.map((name) => {
+        const hit = schema.find((column) => column.name.toLowerCase() === name.toLowerCase())
         return hit ? hit.name : name
       })
-    : schema.map((c) => c.name)
 
   const rowCount = 8
   const rows: (string | number | null)[][] = []

@@ -1,0 +1,90 @@
+# 示例数据源：Postgres、MySQL、ClickHouse、MinIO。不跟应用栈一起启动。
+# 应用 Postgres 占着 5432，这里的 Postgres 听 5433。
+# ./data-sources.sh
+name: lake-sources
+
+services:
+  # 127.0.0.1:5433，库 benchmark，用户和密码都是 benchmark。表 public.test1。
+  postgres:
+    image: postgres:16
+    network_mode: host
+    environment:
+      POSTGRES_DB: benchmark
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: benchmark
+    command: ["postgres", "-c", "port=5433"]
+    volumes:
+      - source-pg:/var/lib/postgresql/data
+      - ./docker/postgres/02-benchmark-table.sql:/docker-entrypoint-initdb.d/02-benchmark-table.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5433 -U benchmark -d benchmark"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 127.0.0.1:3306，库 db1，用户 demo，密码 demo。
+  mysql:
+    image: mysql:8.4
+    network_mode: host
+    environment:
+      MYSQL_ROOT_PASSWORD: demo
+      MYSQL_DATABASE: db1
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demo
+    volumes:
+      - source-mysql:/var/lib/mysql
+      - ./docker/mysql/test1.sql:/docker-entrypoint-initdb.d/test1.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pdemo", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # HTTP 8123，原生协议 9000。库 demo，用户 demo，密码 demo。
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    network_mode: host
+    environment:
+      CLICKHOUSE_DB: demo
+      CLICKHOUSE_USER: demo
+      CLICKHOUSE_PASSWORD: demo
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - source-clickhouse:/var/lib/clickhouse
+      - ./docker/clickhouse/test1.sql:/docker-entrypoint-initdb.d/test1.sql:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--user", "demo", "--password", "demo", "--query", "SELECT 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  # API 127.0.0.1:9100，控制台 127.0.0.1:9001。用户和密码都是 minioadmin。
+  # Docker Hub 的 minio/minio 已下架，这里用仍公开、命令兼容的社区构建。
+  minio:
+    image: docker.io/pgsty/silo:RELEASE.2026-11-12T00-00-00Z
+    network_mode: host
+    command: server /data --address ":9100" --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - source-minio:/data
+    # 镜像里的 mc 别名 local 写死 9000，那是 ClickHouse。直接探 API 端口。
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9100/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  source-pg:
+  source-mysql:
+  source-clickhouse:
+  source-minio:

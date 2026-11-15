@@ -92,15 +92,15 @@ const SUB_TABS = ['小文件合并', '快照清理', '分区生命周期管理',
 const DISABLED_SUB_TABS = ['分区生命周期管理', '孤儿文件治理']
 
 function onSelectCatalog(name: string) {
-  router.push(`/las/catalog/metadata?catalog=${name}`)
+  router.push(`/catalog/metadata?catalog=${name}`)
 }
 
 function onSelectDatabase(catalog: string, database: string) {
-  router.push(`/las/catalog/metadata/database/${catalog}/${database}`)
+  router.push(`/catalog/metadata/database/${catalog}/${database}`)
 }
 
 function onSelectTable(catalog: string, database: string, table: string) {
-  router.push(`/las/catalog/metadata/database/table/detail/${catalog}/${database}/${table}`)
+  router.push(`/catalog/metadata/database/table/detail/${catalog}/${database}/${table}`)
 }
 
 function onMergeConfirm(_config: CompactMergeConfig) {

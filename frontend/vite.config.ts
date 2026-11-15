@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       // 仅代理 /api/ 前缀，避免与前端路由（如 /apikeys）冲突
       '^/api/': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },

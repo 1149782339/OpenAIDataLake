@@ -1,57 +1,65 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SvgIcon from '@/components/SvgIcon.vue'
 import SqlEditor from '@/components/explore/SqlEditor.vue'
-import { useLasCatalogStore } from '@/stores/lasCatalog'
+import { ApiError, errorMessage } from '@/api/http'
+import { useLasDataSourceStore } from '@/stores/lasDataSources'
 import { useLasExploreStore } from '@/stores/lasExplore'
 import { useUiStore } from '@/stores/ui'
 
+const router = useRouter()
+const route = useRoute()
 const store = useLasExploreStore()
-const catalog = useLasCatalogStore()
+const dataSources = useLasDataSourceStore()
 const ui = useUiStore()
 
 const editor = ref<InstanceType<typeof SqlEditor> | null>(null)
-const expanded = ref<Set<string>>(new Set(['cat:catalog1']))
+const expanded = ref<Set<string>>(new Set())
+const treeError = ref('')
 
 interface TreeRow {
-  kind: 'cat' | 'db' | 'table'
+  kind: 'source' | 'schema' | 'table'
   id: string
   depth: number
   label: string
   open: boolean
   qualified?: string
+  error?: string | null
 }
 
 const treeRows = computed<TreeRow[]>(() => {
   const rows: TreeRow[] = []
-  catalog.catalogs.forEach((cat) => {
-    const catOpen = expanded.value.has(`cat:${cat.name}`)
+  dataSources.catalog.forEach((source) => {
+    const sourceOpen = expanded.value.has(`src:${source.name}`)
     rows.push({
-      kind: 'cat',
-      id: cat.name,
+      kind: 'source',
+      id: source.name,
       depth: 0,
-      label: cat.name,
-      open: catOpen,
+      label: source.name,
+      open: sourceOpen,
+      error: source.error,
     })
-    if (!catOpen) return
-    cat.databases.forEach((db) => {
-      const dbOpen = expanded.value.has(`db:${cat.name}.${db.name}`)
+    if (!sourceOpen) return
+    source.schemas.forEach((schema) => {
+      const schemaId = `${source.name}.${schema.name}`
+      const schemaOpen = expanded.value.has(`schema:${schemaId}`)
       rows.push({
-        kind: 'db',
-        id: `${cat.name}.${db.name}`,
+        kind: 'schema',
+        id: schemaId,
         depth: 1,
-        label: db.name,
-        open: dbOpen,
+        label: schema.name,
+        open: schemaOpen,
       })
-      if (!dbOpen) return
-      db.tables.forEach((table) => {
+      if (!schemaOpen) return
+      schema.tables.forEach((table) => {
         rows.push({
           kind: 'table',
-          id: `${cat.name}.${db.name}.${table.name}`,
+          id: `${schemaId}.${table}`,
           depth: 2,
-          label: table.name,
+          label: table,
           open: false,
-          qualified: `${cat.name}.${db.name}.${table.name}`,
+          qualified: `${source.name}.${schema.name}.${table}`,
         })
       })
     })
@@ -74,10 +82,10 @@ function toggle(key: string) {
 }
 
 function onTreeClick(row: TreeRow) {
-  if (row.kind === 'cat') {
-    toggle(`cat:${row.id}`)
-  } else if (row.kind === 'db') {
-    toggle(`db:${row.id}`)
+  if (row.kind === 'source') {
+    toggle(`src:${row.id}`)
+  } else if (row.kind === 'schema') {
+    toggle(`schema:${row.id}`)
   } else if (row.qualified) {
     editor.value?.insertText(row.qualified)
   }
@@ -85,9 +93,9 @@ function onTreeClick(row: TreeRow) {
 
 function expandAll() {
   const keys = new Set<string>()
-  catalog.catalogs.forEach((cat) => {
-    keys.add(`cat:${cat.name}`)
-    cat.databases.forEach((db) => keys.add(`db:${cat.name}.${db.name}`))
+  dataSources.catalog.forEach((source) => {
+    keys.add(`src:${source.name}`)
+    source.schemas.forEach((schema) => keys.add(`schema:${source.name}.${schema.name}`))
   })
   expanded.value = keys
 }
@@ -96,8 +104,18 @@ function newQuery() {
   store.createTab()
 }
 
-function refreshCatalog() {
-  ui.toast('数据目录已刷新')
+async function refreshCatalog() {
+  treeError.value = ''
+  try {
+    await dataSources.loadCatalog()
+    ui.toast('数据源已刷新')
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.status === 401) {
+      await router.push({ path: '/login', query: { redirect: route.fullPath } })
+      return
+    }
+    treeError.value = errorMessage(cause, '加载数据源失败')
+  }
 }
 
 function onSave() {
@@ -105,9 +123,17 @@ function onSave() {
   ui.toast('查询已保存')
 }
 
-function onRun() {
-  store.run()
+async function onRun() {
+  try {
+    await store.run()
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.status === 401) {
+      await router.push({ path: '/login', query: { redirect: route.fullPath } })
+    }
+  }
 }
+
+onMounted(refreshCatalog)
 </script>
 
 <template>
@@ -142,7 +168,7 @@ function onRun() {
 
       <div class="ex-side-block">
         <div class="ex-side-title">
-          <span>数据目录</span>
+          <span>数据源</span>
           <button class="ex-icon-btn" type="button" title="刷新" @click="refreshCatalog">
             <SvgIcon name="refresh" />
           </button>
@@ -157,6 +183,7 @@ function onRun() {
             class="ex-tree-row"
             type="button"
             :style="{ '--depth': row.depth }"
+            :title="row.error || undefined"
             @click="onTreeClick(row)"
           >
             <span class="ex-tree-chev">
@@ -164,7 +191,8 @@ function onRun() {
             </span>
             <span class="ex-tree-label">{{ row.label }}</span>
           </button>
-          <div v-if="!treeRows.length" class="ex-empty">暂无数据目录</div>
+          <div v-if="treeError" class="ex-empty">{{ treeError }}</div>
+          <div v-else-if="!treeRows.length" class="ex-empty">暂无数据源</div>
         </div>
       </div>
     </aside>
@@ -214,31 +242,6 @@ function onRun() {
           <SvgIcon name="chevDown" />
         </button>
 
-        <div class="ex-field">
-          <label>Catalog</label>
-          <div class="ex-select">
-            <select v-model="store.catalogName">
-              <option v-for="cat in catalog.catalogs" :key="cat.name" :value="cat.name">
-                {{ cat.name }}
-              </option>
-            </select>
-            <SvgIcon name="chevDown" />
-          </div>
-        </div>
-
-        <div class="ex-field">
-          <label>Database</label>
-          <div class="ex-select">
-            <select v-model="store.databaseName">
-              <option value="system">system</option>
-              <option v-for="db in store.databases" :key="db.name" :value="db.name">
-                {{ db.name }}
-              </option>
-            </select>
-            <SvgIcon name="chevDown" />
-          </div>
-        </div>
-
         <div class="ex-toolbar-spacer" />
 
         <div class="ex-field">
@@ -249,11 +252,6 @@ function onRun() {
             <SvgIcon name="chevDown" />
           </div>
         </div>
-      </div>
-
-      <div class="ex-notice">
-        <SvgIcon name="info" />
-        当前 Catalog 允许数据读写准入，请前往目录配置关闭。
       </div>
 
       <SqlEditor

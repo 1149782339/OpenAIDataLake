@@ -1,0 +1,64 @@
+# 应用栈。只有控制台自己的 Postgres。示例数据源在 docker-compose.datasources.yml。
+# LAKE_MASTER_KEY 和初始管理员密码只适合本机，正式环境请换成自己的值。
+# WSL 里 netavark 的 nftables 建不了网桥，所以和 OpenDRS 一样用宿主机网络。
+services:
+  # 控制台库 datalake。127.0.0.1:5432，用户和密码都是 datalake。
+  postgres:
+    image: postgres:16
+    network_mode: host
+    environment:
+      POSTGRES_DB: datalake
+      POSTGRES_USER: datalake
+      POSTGRES_PASSWORD: datalake
+    volumes:
+      - lake-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datalake -d datalake"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 控制台 8080。S3 网关改听 9109，把 9000 留给数据源 ClickHouse 的原生协议。
+  lake:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    environment:
+      DB_URL: jdbc:postgresql://127.0.0.1:5432/datalake
+      DB_USER: datalake
+      DB_PASSWORD: datalake
+      LAKE_MASTER_KEY: ${LAKE_MASTER_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      LAKE_ADMIN_USERNAME: ${LAKE_ADMIN_USERNAME:-admin}
+      LAKE_ADMIN_PASSWORD: ${LAKE_ADMIN_PASSWORD:-admin123}
+      LAKE_CORS_ORIGINS: ${LAKE_CORS_ORIGINS:-http://localhost:5173}
+      LAKE_COOKIE_SECURE: ${LAKE_COOKIE_SECURE:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo >/dev/tcp/127.0.0.1/8080 && echo >/dev/tcp/127.0.0.1/9109"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 40s
+
+  # 页面在 80，/api 转到同一台机器上的控制台 8080。
+  # dist 由 dev.sh 在本机 npm run build 生成，直接挂进来，不把前端打进镜像。
+  web:
+    image: nginx:alpine
+    network_mode: host
+    volumes:
+      - ../frontend/dist:/usr/share/nginx/html:ro
+      - ../frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      lake:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lake-pg:

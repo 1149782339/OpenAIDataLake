@@ -1,53 +1,26 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { api } from '@/api/http'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+    auth?: boolean
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { title: '登录' },
+  },
+  {
     path: '/',
-    component: () => import('@/layouts/BasicLayout.vue'),
+    component: () => import('@/layouts/LasLayout.vue'),
     children: [
       {
         path: '',
-        redirect: '/datasets',
-      },
-      {
-        path: 'datasets',
-        name: 'datasets',
-        component: () => import('@/views/DatasetsView.vue'),
-        meta: { title: '数据集' },
-      },
-      {
-        path: 'metadata',
-        name: 'metadata',
-        component: () => import('@/views/MetadataView.vue'),
-        meta: { title: '数据目录' },
-      },
-      {
-        path: 'explore',
-        name: 'explore',
-        component: () => import('@/views/ExploreView.vue'),
-        meta: { title: '数据探查' },
-      },
-      {
-        path: 'apikeys',
-        name: 'apikeys',
-        component: () => import('@/views/ApiKeysView.vue'),
-        meta: { title: 'API Key 管理' },
-      },
-      {
-        path: 'grants',
-        name: 'grants',
-        component: () => import('@/views/GrantsView.vue'),
-        meta: { title: '授权管理' },
-      },
-    ],
-  },
-  {
-    path: '/las',
-    component: () => import('@/layouts/LasLayout.vue'),
-    children: [
-      { path: '', redirect: '/las/dataset/common' },
-      {
-        path: 'dataset/common',
         name: 'las-common-datasets',
         component: () => import('@/views/las/CommonDatasetsView.vue'),
         meta: { title: '数据集 - AI 数据湖服务 LAS' },
@@ -104,7 +77,37 @@ const routes: RouteRecordRaw[] = [
         path: 'catalog/explore',
         name: 'las-catalog-explore',
         component: () => import('@/views/las/LasExploreView.vue'),
-        meta: { title: '数据探查 - AI 数据湖服务 LAS' },
+        meta: { title: '数据探查 - AI 数据湖服务 LAS', auth: true },
+      },
+      {
+        path: 'catalog/directories',
+        name: 'las-directories',
+        component: () => import('@/views/las/FileDirectoryView.vue'),
+        meta: { title: '文件目录 - AI 数据湖服务 LAS', auth: true },
+      },
+      {
+        path: 'catalog/directories/create',
+        name: 'las-directories-create',
+        component: () => import('@/views/las/FileDirectoryCreateView.vue'),
+        meta: { title: '创建文件目录 - AI 数据湖服务 LAS', auth: true },
+      },
+      {
+        path: 'catalog/sources',
+        name: 'las-sources',
+        component: () => import('@/views/las/DataSourceView.vue'),
+        meta: { title: '数据源 - AI 数据湖服务 LAS', auth: true },
+      },
+      {
+        path: 'catalog/sources/create',
+        name: 'las-sources-create',
+        component: () => import('@/views/las/DataSourceCreateView.vue'),
+        meta: { title: '创建数据源 - AI 数据湖服务 LAS', auth: true },
+      },
+      {
+        path: 'catalog/sources/:id/access',
+        name: 'las-sources-access',
+        component: () => import('@/views/las/DataSourceAccessView.vue'),
+        meta: { title: '数据源权限 - AI 数据湖服务 LAS', auth: true },
       },
     ],
   },
@@ -169,6 +172,16 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior: () => ({ top: 0 }),
+})
+
+router.beforeEach(async (to) => {
+  if (to.path === '/login') return true
+  try {
+    await api('/api/auth/me')
+    return true
+  } catch {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
 })
 
 router.afterEach((to) => {

@@ -30,21 +30,21 @@ const tables = computed(() => {
 })
 
 function onSelectCatalog(name: string) {
-  router.push('/las/catalog/metadata')
+  router.push('/catalog/metadata')
   store.selectCatalog(name)
 }
 
 function onSelectDatabase(catalog: string, database: string) {
-  router.push(`/las/catalog/metadata/database/${catalog}/${database}`)
+  router.push(`/catalog/metadata/database/${catalog}/${database}`)
 }
 
 function onSelectTable(catalog: string, database: string, table: string) {
-  router.push(`/las/catalog/metadata/database/table/detail/${catalog}/${database}/${table}`)
+  router.push(`/catalog/metadata/database/table/detail/${catalog}/${database}/${table}`)
 }
 
 function onCreateTable() {
   router.push(
-    `/las/catalog/metadata/database/${catalogName.value}/${databaseName.value}/table/create`,
+    `/catalog/metadata/database/${catalogName.value}/${databaseName.value}/table/create`,
   )
 }
 </script>
@@ -176,7 +176,7 @@ function onCreateTable() {
                 <td>
                   <RouterLink
                     class="lm-link"
-                    :to="`/las/catalog/metadata/database/table/detail/${catalogName}/${databaseName}/${row.name}`"
+                    :to="`/catalog/metadata/database/table/detail/${catalogName}/${databaseName}/${row.name}`"
                   >
                     {{ row.name }}
                   </RouterLink>

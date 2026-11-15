@@ -29,7 +29,7 @@ const navGroups: NavGroup[] = [
     key: 'dataset',
     label: '数据集',
     icon: 'dataset',
-    to: '/las/dataset/common',
+    to: '/',
     children: [],
   },
   {
@@ -48,9 +48,11 @@ const navGroups: NavGroup[] = [
     label: '湖管理',
     icon: 'lake',
     children: [
-      { label: '元数据', to: '/las/catalog/metadata' },
-      { label: '数据探查', to: '/las/catalog/explore' },
-      { label: '权限管理', to: '/las/catalog/permission' },
+      { label: '元数据', to: '/catalog/metadata' },
+      { label: '数据探查', to: '/catalog/explore' },
+      { label: '权限管理', to: '/catalog/permission' },
+      { label: '文件目录', to: '/catalog/directories' },
+      { label: '数据源', to: '/catalog/sources' },
     ],
   },
 ]
@@ -73,7 +75,7 @@ function toggleGroup(key: string) {
           <RouterLink
             v-if="group.to && !group.children.length"
             class="group-title"
-            :class="{ active: activePath.startsWith(group.to) }"
+            :class="{ active: group.to === '/' ? activePath === '/' || activePath.startsWith('/dataset/') : activePath.startsWith(group.to) }"
             :title="group.label"
             :to="group.to"
           >

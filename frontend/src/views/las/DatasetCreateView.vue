@@ -85,7 +85,7 @@ function onSubmit() {
     source: SOURCES.find((s) => s.key === source.value)?.label ?? '对象存储 OSS',
     path: storagePath.value.trim(),
   })
-  router.push(kind.value === 'common' ? '/las/dataset/common' : '/las/dataset/infer')
+  router.push(kind.value === 'common' ? '/' : '/dataset/infer')
 }
 
 function onCancel() {

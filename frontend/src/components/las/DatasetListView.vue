@@ -86,7 +86,7 @@ function goPage(page: number) {
 
 function onCreate() {
   router.push(
-    props.kind === 'common' ? '/las/dataset/common/create' : '/las/dataset/infer/create',
+    props.kind === 'common' ? '/dataset/common/create' : '/dataset/infer/create',
   )
 }
 </script>

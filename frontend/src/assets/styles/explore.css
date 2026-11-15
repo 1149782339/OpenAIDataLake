@@ -430,7 +430,8 @@
   left: 0;
   right: 0;
   padding-right: 10px;
-  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font: 13px/20px Consolas, 'Liberation Mono', Menlo, monospace;
+  font-variant-ligatures: none;
   color: #b4bac3;
 }
 .ex-code {
@@ -439,17 +440,37 @@
   min-width: 0;
   overflow: hidden;
 }
+.ex-highlight,
+.ex-highlight code,
+.ex-code textarea {
+  font-family: Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 20px;
+  letter-spacing: 0;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+  tab-size: 4;
+  text-rendering: auto;
+}
 .ex-highlight {
   position: absolute;
   top: 0;
   left: 0;
   margin: 0;
   padding: 12px 16px;
-  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   color: var(--text);
   white-space: pre;
   pointer-events: none;
   will-change: transform;
+}
+.ex-highlight code {
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  white-space: pre;
 }
 .ex-code textarea {
   position: absolute;
@@ -463,16 +484,22 @@
   background: transparent;
   color: transparent;
   caret-color: var(--text);
-  font: 12.5px/20px 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   white-space: pre;
   overflow: auto;
 }
 .ex-code textarea::selection {
   background: rgba(43, 108, 240, 0.18);
 }
+.sql-kw,
+.sql-str,
+.sql-num,
+.sql-com {
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0;
+}
 .sql-kw {
   color: #2b6cf0;
-  font-weight: 600;
 }
 .sql-str {
   color: #c41a16;
@@ -482,7 +509,6 @@
 }
 .sql-com {
   color: #98a1ad;
-  font-style: italic;
 }
 
 .ex-float-bar {

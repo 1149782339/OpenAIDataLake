@@ -26,11 +26,11 @@ function onSelectCatalog(name: string) {
 }
 
 function onSelectDatabase(catalogName: string, dbName: string) {
-  router.push(`/las/catalog/metadata/database/${catalogName}/${dbName}`)
+  router.push(`/catalog/metadata/database/${catalogName}/${dbName}`)
 }
 
 function onSelectTable(catalogName: string, dbName: string, tableName: string) {
-  router.push(`/las/catalog/metadata/database/table/detail/${catalogName}/${dbName}/${tableName}`)
+  router.push(`/catalog/metadata/database/table/detail/${catalogName}/${dbName}/${tableName}`)
 }
 
 function onCreateCatalog() {
@@ -158,12 +158,12 @@ function onCreateDatabaseSubmit(payload: DatabasePayload) {
           <tbody>
             <tr v-for="db in databases" :key="db.name">
               <td>
-                <RouterLink class="lm-link" :to="`/las/catalog/metadata/database/${store.catalog?.name}/${db.name}`">
+                <RouterLink class="lm-link" :to="`/catalog/metadata/database/${store.catalog?.name}/${db.name}`">
                   {{ db.name }}
                 </RouterLink>
               </td>
               <td>
-                <RouterLink class="lm-link" :to="`/las/catalog/metadata/database/${store.catalog?.name}/${db.name}`">
+                <RouterLink class="lm-link" :to="`/catalog/metadata/database/${store.catalog?.name}/${db.name}`">
                   {{ db.tableCount }}
                 </RouterLink>
               </td>

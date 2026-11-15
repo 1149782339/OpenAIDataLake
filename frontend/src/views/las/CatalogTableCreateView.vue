@@ -120,11 +120,11 @@ function onSubmit() {
       ? fields.value.filter((f) => f.name).map((f) => ({ name: f.name, type: f.type }))
       : undefined,
   })
-  router.push(`/las/catalog/metadata/database/${catalogName.value}/${databaseName.value}`)
+  router.push(`/catalog/metadata/database/${catalogName.value}/${databaseName.value}`)
 }
 
 function onCancel() {
-  router.push(`/las/catalog/metadata/database/${catalogName.value}/${databaseName.value}`)
+  router.push(`/catalog/metadata/database/${catalogName.value}/${databaseName.value}`)
 }
 </script>
 

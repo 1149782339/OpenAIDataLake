@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { useLasCatalogStore } from './lasCatalog'
-import { runMockSql, type SqlColumn, type SqlResult } from '@/utils/sql'
+import { ApiError, errorMessage as errorText } from '@/api/http'
+import { runExploreQuery, type ExploreResult } from '@/api/console'
 
 export interface LasSavedQuery {
   id: string
@@ -16,15 +16,7 @@ export interface LasExploreTab {
   sql: string
 }
 
-const DEFAULT_SQL = 'select id, name, created_at from catalog1.default.test;'
-
-/** 表未声明结构时使用的兜底结构 */
-const FALLBACK_SCHEMA: SqlColumn[] = [
-  { name: 'id', type: 'int64' },
-  { name: 'name', type: 'string' },
-  { name: 'value', type: 'double' },
-  { name: 'created_at', type: 'timestamp[us]' },
-]
+const DEFAULT_SQL = 'select * from postgres_datasource.public.test1'
 
 function stamp(): string {
   const d = new Date()
@@ -33,22 +25,8 @@ function stamp(): string {
 }
 
 export const useLasExploreStore = defineStore('las-explore', () => {
-  const catalog = useLasCatalogStore()
-
   const savedQueries = ref<LasSavedQuery[]>([
     { id: 'q1', name: 'Untitled-1', updatedAt: stamp(), sql: DEFAULT_SQL },
-    {
-      id: 'q2',
-      name: '数据表概览',
-      updatedAt: '10-28 18:02',
-      sql: 'select id, name, duration from catalog1.default.test;',
-    },
-    {
-      id: 'q3',
-      name: '数据表采样',
-      updatedAt: '10-27 09:41',
-      sql: 'select * from catalog1.default.test3 limit 10;',
-    },
   ])
 
   const tabs = ref<LasExploreTab[]>([
@@ -57,12 +35,10 @@ export const useLasExploreStore = defineStore('las-explore', () => {
   const activeTabId = ref('t1')
 
   const queryKeyword = ref('')
-  const catalogName = ref(catalog.selectedCatalog)
-  const databaseName = ref(catalog.selectedDatabase)
   const resource = ref('默认计算资源')
 
   const running = ref(false)
-  const result = ref<SqlResult | null>(null)
+  const result = ref<ExploreResult | null>(null)
   const errorMessage = ref('')
   const lastSavedAt = ref(stamp())
   const autoSave = ref(true)
@@ -86,27 +62,6 @@ export const useLasExploreStore = defineStore('las-explore', () => {
     return data.rows.filter((row) =>
       row.some((cell) => String(cell ?? '').toLowerCase().includes(q)),
     )
-  })
-
-  /** 当前 Catalog 下的数据库 */
-  const databases = computed(
-    () => catalog.catalogs.find((c) => c.name === catalogName.value)?.databases ?? [],
-  )
-
-  /** 已知表（供演示环境的 SQL 执行生成结果集） */
-  const knownTables = computed(() => {
-    const list: { name: string; schema: SqlColumn[] }[] = []
-    catalog.catalogs.forEach((cat) => {
-      cat.databases.forEach((db) => {
-        db.tables.forEach((table) => {
-          list.push({
-            name: table.name,
-            schema: table.schema?.map((f) => ({ name: f.name, type: f.type })) ?? FALLBACK_SCHEMA,
-          })
-        })
-      })
-    })
-    return list
   })
 
   function createTab(name?: string) {
@@ -172,22 +127,20 @@ export const useLasExploreStore = defineStore('las-explore', () => {
     lastSavedAt.value = stamp()
   }
 
-  function run() {
+  async function run() {
     const tab = activeTab.value
     if (!tab) return
     running.value = true
     errorMessage.value = ''
     result.value = null
-
-    window.setTimeout(() => {
-      const outcome = runMockSql(tab.sql, knownTables.value)
+    try {
+      result.value = await runExploreQuery(tab.sql)
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) throw cause
+      errorMessage.value = errorText(cause, '查询失败')
+    } finally {
       running.value = false
-      if (outcome.ok) {
-        result.value = outcome.result
-      } else {
-        errorMessage.value = outcome.message
-      }
-    }, 260)
+    }
   }
 
   return {
@@ -195,8 +148,6 @@ export const useLasExploreStore = defineStore('las-explore', () => {
     tabs,
     activeTabId,
     queryKeyword,
-    catalogName,
-    databaseName,
     resource,
     running,
     result,
@@ -207,8 +158,6 @@ export const useLasExploreStore = defineStore('las-explore', () => {
     activeTab,
     filteredQueries,
     filteredRows,
-    databases,
-    knownTables,
     createTab,
     closeTab,
     selectTab,
